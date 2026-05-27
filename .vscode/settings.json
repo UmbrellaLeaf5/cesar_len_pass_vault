@@ -6,6 +6,7 @@
     "cryptor",
     "halign",
     "kivy",
+    "rgba",
     "screenmanager",
     "subkey",
     "urandom",

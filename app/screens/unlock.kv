@@ -9,6 +9,13 @@
     padding: 40
     spacing: 20
 
+    canvas.before:
+      Color:
+        rgba: root._bg_color
+      Rectangle:
+        pos: self.pos
+        size: self.size
+
     Widget:
       size_hint_y: 1
 

@@ -36,6 +36,8 @@ class VaultScreen(Screen):
   status_label = ObjectProperty(None)
   toolbar = ObjectProperty(None)
 
+  preloaded_text: str = ""
+
   _state: VaultState = VaultState.LOADED
 
   def __init__(self, **kwargs) -> None:
@@ -49,6 +51,18 @@ class VaultScreen(Screen):
 
     self.editor.text = ""
     self.status_label.text = ""
+
+  def on_pre_enter(self, *args: object) -> None:
+    """Вызывается перед переходом на экран."""
+
+    if self.preloaded_text:
+      self.editor.text = self.preloaded_text
+      vault = json_to_vault(self.preloaded_text)
+      self.status_label.text = (
+        f"Loaded {datetime.now().strftime('%H:%M')} - {len(vault.entries)} entries"
+      )
+      self._update_ui_by_state(VaultState.LOADED)
+      self.preloaded_text = ""
 
   def download(self) -> None:
     """Скачать хранилище с Яндекс.Диска и показать в редакторе."""
