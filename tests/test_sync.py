@@ -1,5 +1,5 @@
 """
-Тесты для sync — синхронизация с Яндекс.Диском.
+Тесты для sync - синхронизация с Яндекс.Диском.
 
 Требуют валидный YA_TOKEN в .env.
 Пропускаются, если токен отсутствует или невалиден.
@@ -15,14 +15,14 @@ from unittest.mock import patch
 import pytest
 import yadisk
 
-from cesar_len_pass_vault.config import YA_TOKEN
+from cesar_len_pass_vault.config import config
 from cesar_len_pass_vault.sync import check_connection, download, upload
 
 
 TEST_REMOTE_PATH = "/Приложения/cesar-len-key/vault_test.enc"
 
 pytestmark = pytest.mark.skipif(
-  not YA_TOKEN,
+  not config.YA_TOKEN,
   reason="YA_TOKEN не задан в .env",
 )
 
@@ -31,7 +31,7 @@ def _cleanup_test_file() -> None:
   """Удаляет тестовый файл с Яндекс.Диска (не падает если нет)."""
 
   try:
-    y = yadisk.YaDisk(token=YA_TOKEN)
+    y = yadisk.YaDisk(token=config.YA_TOKEN)
 
     if y.check_token():
       y.remove(TEST_REMOTE_PATH, permanently=True)
@@ -46,7 +46,7 @@ def _manage_test_vault() -> Generator[None, None, None]:
   """
   Фикстура: удаляет тестовый vault перед тестом и после.
 
-  Не трогает боевой vault (REMOTE_PATH) —
+  Не трогает боевой vault (config.REMOTE_PATH) -
   патч в _patch_remote_path направляет sync.upload/download на TEST_REMOTE_PATH.
   """
 
@@ -60,8 +60,9 @@ def _manage_test_vault() -> Generator[None, None, None]:
 def _patch_remote_path(func):
   """Декоратор: подменяет REMOTE_PATH на тестовый."""
 
-  return patch(
-    "cesar_len_pass_vault.sync.REMOTE_PATH",
+  return patch.object(
+    config,
+    "REMOTE_PATH",
     TEST_REMOTE_PATH,
   )(func)
 

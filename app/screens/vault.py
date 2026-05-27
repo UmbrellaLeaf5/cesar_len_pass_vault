@@ -28,7 +28,7 @@ from cesar_len_pass_vault import (
   unpack_vault_primary,
   vault_to_json,
 )
-from cesar_len_pass_vault.config import BACKUP_REMOTE_PATH
+from cesar_len_pass_vault.config import config
 from cesar_len_pass_vault.sync import ConnectionError, download, upload
 
 
@@ -104,14 +104,14 @@ class VaultScreen(Screen):
       app = cast("CesarVaultApp", App.get_running_app())
       pw = app.master_password
 
-      # Основное хранилище — шифрование через cesar_len_key
+      # Основное хранилище - шифрование через cesar_len_key
       primary_blob = pack_vault_primary(vault, pw)
       upload(primary_blob)
 
-      # Резервная копия — шифрование через cipher_wrapper
+      # Резервная копия - шифрование через cipher_wrapper
       try:
         backup_blob = pack_vault(vault, pw)
-        upload(backup_blob, path=BACKUP_REMOTE_PATH)
+        upload(backup_blob, path=config.BACKUP_REMOTE_PATH)
       except ConnectionError:
         pass  # ошибка резервной копии некритична
 
@@ -174,7 +174,7 @@ class VaultScreen(Screen):
     self._set_state("loading")
 
     try:
-      blob = download(path=BACKUP_REMOTE_PATH)
+      blob = download(path=config.BACKUP_REMOTE_PATH)
       app = cast("CesarVaultApp", App.get_running_app())
       vault = unpack_vault(blob, app.master_password)
       json_formatted = vault_to_json(vault)

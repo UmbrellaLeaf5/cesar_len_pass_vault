@@ -18,9 +18,9 @@ import struct
 from cesar_len_key.alphabet_shuffle import ShuffledAlphabet
 from cesar_len_key.cryptor import DEFAULT_ALPHABET
 
+from cesar_len_pass_vault.config import config
 from cesar_len_pass_vault.crypto_utils import (
   HEADER_FORMAT,
-  SALT_SIZE,
   DecryptionError,
   _derive_key,
   get_body,
@@ -28,15 +28,11 @@ from cesar_len_pass_vault.crypto_utils import (
 )
 
 
-ROUNDS = 3
-MAGIC = b"CESAR_VAULT_V001"
-
-
 def _subkey(parent_key: bytes, round_num: int) -> str:
   """
   Порождение подключа для конкретного раунда через HMAC-SHA256.
 
-  Подключ — строка из hex-цифр (64 символа = 256 бит).
+  Подключ - строка из hex-цифр (64 символа = 256 бит).
   Используется как ключ для ShuffledAlphabet и для вычисления сдвига.
   """
 
@@ -70,7 +66,10 @@ def _compute_shift(subkey: str, position: int, alph_len: int) -> int:
   raw_shift = int.from_bytes(hash_bytes[:4], "big")
   shift = raw_shift % alph_len
 
-  return shift if shift != 0 else 1
+  if shift == 0:
+    shift = 1
+
+  return shift
 
 
 def _caesar_shift(char: str, shift: int, alph: str, decrypt: bool = False) -> str:
@@ -86,7 +85,7 @@ def _caesar_shift(char: str, shift: int, alph: str, decrypt: bool = False) -> st
     char: исходный символ
     shift: целочисленный сдвиг (не ноль)
     alph: перемешанный алфавит
-    decrypt: если True — обратный сдвиг
+    decrypt: если True - обратный сдвиг
 
   Returns:
     Зашифрованный символ (или исходный, если его нет в алфавите)
@@ -106,7 +105,7 @@ def _caesar_shift(char: str, shift: int, alph: str, decrypt: bool = False) -> st
   return alph[new_idx]
 
 
-def _encrypt_text(text: str, key: bytes, rounds: int = ROUNDS) -> str:
+def _encrypt_text(text: str, key: bytes, rounds: int = config.ROUNDS) -> str:
   """
   Многораундовое шифрование текста.
 
@@ -136,11 +135,11 @@ def _encrypt_text(text: str, key: bytes, rounds: int = ROUNDS) -> str:
   return result
 
 
-def _decrypt_text(cipher_text: str, key: bytes, rounds: int = ROUNDS) -> str:
+def _decrypt_text(cipher_text: str, key: bytes, rounds: int = config.ROUNDS) -> str:
   """
   Многораундовое расшифрование (обратное _encrypt_text).
 
-  Раунды идут в обратном порядке, операция сдвига — обратная.
+  Раунды идут в обратном порядке, операция сдвига - обратная.
   """
 
   result = cipher_text
@@ -173,11 +172,11 @@ def encrypt_vault(vault_json: str, master_password: str) -> bytes:
     Зашифрованный блоб (MAGIC + salt + cipher_text), готовый к загрузке на Диск
   """
 
-  salt = os.urandom(SALT_SIZE)
+  salt = os.urandom(config.SALT_SIZE)
   stretched_key = _derive_key(master_password, salt)
   cipher_text = _encrypt_text(vault_json, stretched_key)
   body = cipher_text.encode("utf-8")
-  header = struct.pack(HEADER_FORMAT, MAGIC, salt)
+  header = struct.pack(HEADER_FORMAT, config.MAGIC_BACKUP, salt)
 
   return header + body
 
@@ -198,7 +197,7 @@ def decrypt_vault(encrypted_blob: bytes, master_password: str) -> str:
     DecryptionError: если неверный мастер-пароль
   """
 
-  salt = validate_and_parse_header(encrypted_blob, MAGIC)
+  salt = validate_and_parse_header(encrypted_blob, config.MAGIC_BACKUP)
   body = get_body(encrypted_blob)
   stretched_key = _derive_key(master_password, salt)
 

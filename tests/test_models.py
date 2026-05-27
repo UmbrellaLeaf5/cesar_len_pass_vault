@@ -6,7 +6,7 @@ from cesar_len_pass_vault.models import PasswordEntry, Vault
 
 
 def test_password_entry_defaults() -> None:
-  """PasswordEntry с тремя аргументами — notes пустая строка."""
+  """PasswordEntry с тремя аргументами - notes пустая строка."""
 
   entry = PasswordEntry(service="gmail", login="user", password="abc")
 

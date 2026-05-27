@@ -1,7 +1,7 @@
 """
 Управление синхронизацией хранилища через Яндекс.Диск.
 
-No local file — весь vault существует только как зашифрованный блоб в облаке.
+No local file - весь vault существует только как зашифрованный блоб в облаке.
 """
 
 import io
@@ -9,7 +9,7 @@ import io
 import yadisk
 from yadisk.exceptions import PathNotFoundError, YaDiskError
 
-from cesar_len_pass_vault.config import REMOTE_PATH, YA_TOKEN
+from cesar_len_pass_vault.config import config
 
 
 class ConnectionError(Exception):
@@ -26,7 +26,7 @@ def get_client() -> yadisk.YaDisk:
   Вызывает исключение, если токен невалиден.
   """
 
-  y = yadisk.YaDisk(token=YA_TOKEN)
+  y = yadisk.YaDisk(token=config.YA_TOKEN)
 
   if not y.check_token():
     raise ConnectionError("Invalid Yandex Disk token. Check YA_TOKEN in .env")
@@ -40,7 +40,7 @@ def upload(encrypted_blob: bytes, path: str | None = None) -> None:
   Перезаписывает существующий файл.
   """
 
-  target = path if path is not None else REMOTE_PATH
+  target = path if path is not None else config.REMOTE_PATH
 
   try:
     y = get_client()
@@ -60,7 +60,7 @@ def download(path: str | None = None) -> bytes:
   Возвращает сырые байты.
   """
 
-  target = path if path is not None else REMOTE_PATH
+  target = path if path is not None else config.REMOTE_PATH
 
   try:
     y = get_client()
@@ -102,7 +102,7 @@ def delete_remote(path: str | None = None) -> None:
   Не вызывает исключение, если файл не существует.
   """
 
-  target = path if path is not None else REMOTE_PATH
+  target = path if path is not None else config.REMOTE_PATH
 
   try:
     y = get_client()

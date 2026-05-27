@@ -1,12 +1,11 @@
 """
-Тесты для cipher_wrapper — усиленная криптография.
+Тесты для cipher_wrapper - усиленная криптография.
 """
 
 import json
 import struct
 
 from cesar_len_pass_vault.cipher_wrapper import (
-  ROUNDS,
   DecryptionError,
   _caesar_shift,
   _compute_shift,
@@ -17,6 +16,7 @@ from cesar_len_pass_vault.cipher_wrapper import (
   decrypt_vault,
   encrypt_vault,
 )
+from cesar_len_pass_vault.config import config
 from cesar_len_pass_vault.models import PasswordEntry, Vault
 from cesar_len_pass_vault.storage import vault_to_json
 
@@ -44,7 +44,7 @@ def test_different_passwords_different_cipher_text() -> None:
 
 
 def test_same_password_different_salt() -> None:
-  """Одинаковый JSON и пароль — разные блобы из-за разной соли."""
+  """Одинаковый JSON и пароль - разные блобы из-за разной соли."""
 
   json_str = '{"test": 1}'
 
@@ -101,7 +101,7 @@ def test_wrong_password_fails_json() -> None:
     # Если не упало при декодировании UTF-8, пробуем парсить JSON
     json.loads(result)
     # Крайне маловероятно, но возможно: garbage = valid JSON
-    # В этом случае тест считается пройденным — это приемлемый риск
+    # В этом случае тест считается пройденным - это приемлемый риск
   except (json.JSONDecodeError, UnicodeDecodeError, DecryptionError):
     # Ожидаемое поведение
     pass
@@ -234,8 +234,8 @@ def test_encrypt_decrypt_text_roundtrip() -> None:
   key = b"a" * 32
   original = "Hello, World! This is a test 123."
 
-  encrypted = _encrypt_text(original, key, rounds=ROUNDS)
-  decrypted = _decrypt_text(encrypted, key, rounds=ROUNDS)
+  encrypted = _encrypt_text(original, key, rounds=config.ROUNDS)
+  decrypted = _decrypt_text(encrypted, key, rounds=config.ROUNDS)
 
   assert decrypted == original
 
@@ -246,8 +246,8 @@ def test_encrypt_decrypt_text_cyrillic() -> None:
   key = b"b" * 32
   original = "Привет, мир! Тест 123."
 
-  encrypted = _encrypt_text(original, key, rounds=ROUNDS)
-  decrypted = _decrypt_text(encrypted, key, rounds=ROUNDS)
+  encrypted = _encrypt_text(original, key, rounds=config.ROUNDS)
+  decrypted = _decrypt_text(encrypted, key, rounds=config.ROUNDS)
 
   assert decrypted == original
 
@@ -287,7 +287,7 @@ def test_encrypt_vault_long_content() -> None:
 
 
 def test_vault_json_with_colon_and_special_chars() -> None:
-  """JSON хранилища с :, -, цифрами и кириллицей — точный roundtrip."""
+  """JSON хранилища с :, -, цифрами и кириллицей - точный roundtrip."""
 
   vault = Vault(
     entries=[

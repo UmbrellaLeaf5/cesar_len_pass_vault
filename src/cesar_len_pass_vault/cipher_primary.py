@@ -11,9 +11,9 @@ import struct
 from cesar_len_key.cryptor import DEFAULT_ALPHABET, CryptedLines
 from cesar_len_key.word_cryption import CryptType
 
+from cesar_len_pass_vault.config import config
 from cesar_len_pass_vault.crypto_utils import (
   HEADER_FORMAT,
-  SALT_SIZE,
   DecryptionError,
   _derive_key,
   get_body,
@@ -21,14 +21,11 @@ from cesar_len_pass_vault.crypto_utils import (
 )
 
 
-MAGIC = b"CESAR_PRIMARY_V1"
-
-
 def encrypt_vault_primary(vault_json: str, master_password: str) -> bytes:
   """
   Шифрует JSON-строку хранилища через CryptedLines.
 
-  Весь JSON передаётся как одна строка — CryptedLines разбивает её
+  Весь JSON передаётся как одна строка - CryptedLines разбивает её
   на слова, шифрует каждое, и соединяет обратно пробелами.
   Структурные символы JSON ({, }, [, ], ", :, ,) не входят в алфавит
   и проходят без изменений.
@@ -41,7 +38,7 @@ def encrypt_vault_primary(vault_json: str, master_password: str) -> bytes:
     Зашифрованный блоб (MAGIC + salt + cipher_text)
   """
 
-  salt = os.urandom(SALT_SIZE)
+  salt = os.urandom(config.SALT_SIZE)
   stretched_key = _derive_key(master_password, salt)
   key_hex = stretched_key.hex()
 
@@ -50,7 +47,7 @@ def encrypt_vault_primary(vault_json: str, master_password: str) -> bytes:
   )
   cipher_text = encrypted_lines[0]
   body = cipher_text.encode("utf-8")
-  header = struct.pack(HEADER_FORMAT, MAGIC, salt)
+  header = struct.pack(HEADER_FORMAT, config.MAGIC_PRIMARY, salt)
 
   return header + body
 
@@ -71,7 +68,7 @@ def decrypt_vault_primary(encrypted_blob: bytes, master_password: str) -> str:
     DecryptionError: если неверный пароль
   """
 
-  salt = validate_and_parse_header(encrypted_blob, MAGIC)
+  salt = validate_and_parse_header(encrypted_blob, config.MAGIC_PRIMARY)
   body = get_body(encrypted_blob)
   stretched_key = _derive_key(master_password, salt)
   key_hex = stretched_key.hex()

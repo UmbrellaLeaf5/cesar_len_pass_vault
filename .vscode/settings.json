@@ -1,6 +1,7 @@
 {
   "python-envs.defaultEnvManager": "ms-python.python:venv",
   "cSpell.words": [
+    "calcsize",
     "cryptor",
     "halign",
     "kivy",
@@ -8,6 +9,7 @@
     "subkey",
     "urandom",
     "блоб",
+    "блоба",
     "Валидирует",
     "Многораундовое",
     "многострочность",
@@ -18,5 +20,6 @@
     "Попап",
     "разблокировочном",
     "расшифрования"
-  ]
+  ],
+  "materialkv.pythonFile": "main.py"
 }

@@ -5,10 +5,10 @@
 import hashlib
 import struct
 
+from cesar_len_pass_vault.config import config
 
-SALT_SIZE = 32
-ITERATIONS = 100_000
-HEADER_FORMAT = ">16s32s"
+
+HEADER_FORMAT = f">16s{config.SALT_SIZE}s".encode()
 
 
 class DecryptionError(Exception):
@@ -29,7 +29,7 @@ def _derive_key(master_password: str, salt: bytes) -> bytes:
 
   key = master_password.encode("utf-8") + salt
 
-  for _ in range(ITERATIONS):
+  for _ in range(config.ITERATIONS):
     key = hashlib.sha256(key).digest()
 
   return key
