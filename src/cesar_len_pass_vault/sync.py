@@ -34,16 +34,18 @@ def get_client() -> yadisk.YaDisk:
   return y
 
 
-def upload(encrypted_blob: bytes) -> None:
+def upload(encrypted_blob: bytes, path: str | None = None) -> None:
   """
   Загружает зашифрованный блоб на Яндекс.Диск.
   Перезаписывает существующий файл.
   """
 
+  target = path if path is not None else REMOTE_PATH
+
   try:
     y = get_client()
     file_stream = io.BytesIO(encrypted_blob)
-    y.upload(file_stream, REMOTE_PATH, overwrite=True)
+    y.upload(file_stream, target, overwrite=True)
 
   except ConnectionError:
     raise
@@ -52,16 +54,18 @@ def upload(encrypted_blob: bytes) -> None:
     raise ConnectionError(f"Ошибка загрузки на Диск: {e}") from e
 
 
-def download() -> bytes:
+def download(path: str | None = None) -> bytes:
   """
   Скачивает зашифрованный блоб с Яндекс.Диска.
   Возвращает сырые байты.
   """
 
+  target = path if path is not None else REMOTE_PATH
+
   try:
     y = get_client()
     file_stream = io.BytesIO()
-    y.download(REMOTE_PATH, file_stream)
+    y.download(target, file_stream)
     return file_stream.getvalue()
 
   except ConnectionError:

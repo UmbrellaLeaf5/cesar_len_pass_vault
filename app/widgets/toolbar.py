@@ -17,4 +17,3 @@ class Toolbar(BoxLayout):
   download_enabled = BooleanProperty(True)
   upload_enabled = BooleanProperty(False)
   add_enabled = BooleanProperty(False)
-  copy_enabled = BooleanProperty(False)

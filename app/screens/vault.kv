@@ -17,7 +17,6 @@
       download_enabled: root._state in ("empty", "loaded", "error")
       upload_enabled: root._state == "loaded"
       add_enabled: root._state == "loaded"
-      copy_enabled: root._state == "loaded"
 
       BoxLayout:
         spacing: 4
@@ -40,12 +39,6 @@
           disabled: not toolbar.add_enabled
           opacity: 1 if toolbar.add_enabled else 0.4
           on_release: root.add_entry()
-
-        CustomButton:
-          text: "Копировать"
-          disabled: not toolbar.copy_enabled
-          opacity: 1 if toolbar.copy_enabled else 0.4
-          on_release: root.copy_all()
 
         CustomButton:
           text: "*"

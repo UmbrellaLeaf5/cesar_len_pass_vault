@@ -2,14 +2,16 @@
 Экран ввода мастер-пароля.
 """
 
-from typing import cast
+from typing import TYPE_CHECKING, cast
 
 from kivy.app import App
 from kivy.lang import Builder
 from kivy.properties import ObjectProperty
 from kivy.uix.screenmanager import Screen
 
-from app.main import CesarVaultApp
+
+if TYPE_CHECKING:
+  from app.main import CesarVaultApp
 
 
 Builder.load_file("app/screens/unlock.kv")

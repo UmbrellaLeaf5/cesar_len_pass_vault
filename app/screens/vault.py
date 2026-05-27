@@ -4,23 +4,31 @@
 
 import json
 from datetime import datetime
-from typing import cast
+from typing import TYPE_CHECKING, cast
 
 from kivy.app import App
-from kivy.clock import Clock
-from kivy.core.clipboard import Clipboard
 from kivy.lang import Builder
 from kivy.properties import ObjectProperty
+from kivy.uix.boxlayout import BoxLayout
+from kivy.uix.button import Button
+from kivy.uix.label import Label
+from kivy.uix.popup import Popup
 from kivy.uix.screenmanager import Screen
 
-from app.main import CesarVaultApp
+
+if TYPE_CHECKING:
+  from app.main import CesarVaultApp
+
 from app.screens.add_entry import AddEntryPopup
 from cesar_len_pass_vault import (
   json_to_vault,
   pack_vault,
+  pack_vault_primary,
+  unpack_vault,
+  unpack_vault_primary,
   vault_to_json,
 )
-from cesar_len_pass_vault.cipher_wrapper import decrypt_vault
+from cesar_len_pass_vault.config import BACKUP_REMOTE_PATH
 from cesar_len_pass_vault.sync import ConnectionError, download, upload
 
 
@@ -46,19 +54,7 @@ class VaultScreen(Screen):
     try:
       blob = download()
       app = cast("CesarVaultApp", App.get_running_app())
-
-      # Расшифровка
-      json_str = decrypt_vault(blob, app.master_password)
-
-      # DEBUG: записываем расшифрованный текст до парсинга JSON
-      # try:
-      #   with open("debug_decrypted.txt", "w", encoding="utf-8") as f:
-      #     f.write(repr(json_str))
-      # except OSError:
-      #   pass
-
-      # Парсинг JSON
-      vault = json_to_vault(json_str)
+      vault = unpack_vault_primary(blob, app.master_password)
       json_formatted = vault_to_json(vault)
       self.editor.text = json_formatted
       self._update_status_loaded(len(vault.entries))
@@ -73,9 +69,8 @@ class VaultScreen(Screen):
     except json.JSONDecodeError as e:
       self._set_state("error")
       self._update_status(
-        f"Ошибка JSON при расшифровке: строка {e.lineno}, "
-        f"колонка {e.colno} (символ {e.pos}). "
-        # f"См. debug_decrypted.txt"
+        f"Ошибка JSON при расшифровке: "
+        f"строка {e.lineno}, колонка {e.colno} (символ {e.pos})"
       )
 
     except ConnectionError as e:
@@ -107,19 +102,19 @@ class VaultScreen(Screen):
     self._set_state("loading")
 
     try:
-      # DEBUG: записываем JSON, который уходит на шифрование
-      # json_for_encrypt = vault_to_json(vault)
-
-      # try:
-      #   with open("debug_upload.txt", "w", encoding="utf-8") as f:
-      #     f.write(repr(json_for_encrypt))
-      # except OSError:
-      #   pass
-
       app = cast("CesarVaultApp", App.get_running_app())
-      blob = pack_vault(vault, app.master_password)
+      pw = app.master_password
 
-      upload(blob)
+      # Основное хранилище — шифрование через cesar_len_key
+      primary_blob = pack_vault_primary(vault, pw)
+      upload(primary_blob)
+
+      # Резервная копия — шифрование через cipher_wrapper
+      try:
+        backup_blob = pack_vault(vault, pw)
+        upload(backup_blob, path=BACKUP_REMOTE_PATH)
+      except ConnectionError:
+        pass  # ошибка резервной копии некритична
 
       now = datetime.now().strftime("%H:%M")
       self._update_status(f"Сохранено {now} · {len(vault.entries)} записей")
@@ -139,20 +134,66 @@ class VaultScreen(Screen):
     popup = AddEntryPopup()
     popup.open()
 
-  def copy_all(self) -> None:
-    """Скопировать всё содержимое редактора в буфер обмена."""
-
-    Clipboard.copy(self.editor.text)
-    self._update_status("Скопировано!")
-
-    # Очистить статус через 2 секунды
-    Clock.schedule_once(self._restore_status, 2)
-
   def open_settings(self) -> None:
-    """Открыть экран настроек (или попап)."""
+    """Открыть попап с настройками."""
 
-    # Заглушка для будущего экрана настроек
-    self._update_status("Настройки пока не реализованы")
+    content = BoxLayout(orientation="vertical", padding=12, spacing=8)
+
+    load_btn = Button(
+      text="Загрузить резервную копию",
+      size_hint_y=None,
+      height=48,
+      background_normal="",
+      background_color=(0.2, 0.5, 0.8, 1),
+      color=(1, 1, 1, 1),
+      on_release=lambda _: self._load_backup(),
+    )
+
+    content.add_widget(
+      Label(
+        text="Настройки",
+        size_hint_y=None,
+        height=32,
+        color=(0.9, 0.9, 0.9, 1),
+      )
+    )
+
+    content.add_widget(load_btn)
+
+    popup = Popup(
+      title="",
+      content=content,
+      size_hint=(0.7, 0.35),
+      auto_dismiss=True,
+    )
+
+    popup.open()
+
+  def _load_backup(self) -> None:
+    """Загрузить резервную копию хранилища (cipher_wrapper)."""
+
+    self._set_state("loading")
+
+    try:
+      blob = download(path=BACKUP_REMOTE_PATH)
+      app = cast("CesarVaultApp", App.get_running_app())
+      vault = unpack_vault(blob, app.master_password)
+      json_formatted = vault_to_json(vault)
+      self.editor.text = json_formatted
+      self._update_status_loaded(len(vault.entries))
+      self._set_state("loaded")
+
+    except FileNotFoundError:
+      self._set_state("error")
+      self._update_status("Резервная копия не найдена")
+
+    except ConnectionError as e:
+      self._set_state("error")
+      self._update_status(f"Ошибка: {e}")
+
+    except Exception as e:
+      self._set_state("error")
+      self._update_status(f"Ошибка: {e}")
 
   def _set_state(self, state: str) -> None:
     """Переключить состояние экрана и обновить UI."""
@@ -163,29 +204,26 @@ class VaultScreen(Screen):
       self.toolbar.download_enabled = True
       self.toolbar.upload_enabled = False
       self.toolbar.add_enabled = False
-      self.toolbar.copy_enabled = False
       self.editor.readonly = True
 
       self.editor.text = ""
+
     elif state == "loaded":
       self.toolbar.download_enabled = True
       self.toolbar.upload_enabled = True
       self.toolbar.add_enabled = True
-      self.toolbar.copy_enabled = True
       self.editor.readonly = False
 
     elif state == "loading":
       self.toolbar.download_enabled = False
       self.toolbar.upload_enabled = False
       self.toolbar.add_enabled = False
-      self.toolbar.copy_enabled = False
       self.editor.readonly = True
 
     elif state == "error":
       self.toolbar.download_enabled = True
       self.toolbar.upload_enabled = False
       self.toolbar.add_enabled = False
-      self.toolbar.copy_enabled = False
       self.editor.readonly = True
 
   def _update_status(self, text: str) -> None:
@@ -198,17 +236,3 @@ class VaultScreen(Screen):
 
     now = datetime.now().strftime("%H:%M")
     self.status_label.text = f"Загружено {now} · {entry_count} записей"
-
-  def _restore_status(self, dt: float) -> None:
-    """Восстановить статус-бар после копирования."""
-
-    if self._state == "loaded":
-      try:
-        vault = json_to_vault(self.editor.text)
-        self._update_status_loaded(len(vault.entries))
-
-      except (json.JSONDecodeError, Exception):
-        self._update_status("")
-
-    else:
-      self._update_status("")
