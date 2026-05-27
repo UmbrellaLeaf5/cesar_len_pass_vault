@@ -50,19 +50,24 @@ class AddEntryPopup(Popup):
     )
 
     app = App.get_running_app()
+
     assert app is not None
+
     sm = cast(ScreenManager, app.root)
+
     vault_screen = sm.get_screen("vault")
     current_json = vault_screen.editor.text.strip()
 
     if current_json:
       try:
         data = json.loads(current_json)
+
       except json.JSONDecodeError:
         self.error_label.text = "Ошибка JSON в редакторе"
         self.error_label.opacity = 1
 
         return
+
     else:
       data = {"version": 1, "entries": []}
 

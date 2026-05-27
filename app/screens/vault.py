@@ -4,7 +4,7 @@
 
 import json
 from datetime import datetime
-from typing import TYPE_CHECKING, cast
+from typing import cast
 
 from kivy.app import App
 from kivy.clock import Clock
@@ -13,6 +13,7 @@ from kivy.lang import Builder
 from kivy.properties import ObjectProperty
 from kivy.uix.screenmanager import Screen
 
+from app.main import CesarVaultApp
 from app.screens.add_entry import AddEntryPopup
 from cesar_len_pass_vault import (
   json_to_vault,
@@ -21,10 +22,6 @@ from cesar_len_pass_vault import (
 )
 from cesar_len_pass_vault.cipher_wrapper import decrypt_vault
 from cesar_len_pass_vault.sync import ConnectionError, download, upload
-
-
-if TYPE_CHECKING:
-  from app.main import CesarVaultApp
 
 
 Builder.load_file("app/screens/vault.kv")
@@ -54,11 +51,11 @@ class VaultScreen(Screen):
       json_str = decrypt_vault(blob, app.master_password)
 
       # DEBUG: записываем расшифрованный текст до парсинга JSON
-      try:
-        with open("debug_decrypted.txt", "w", encoding="utf-8") as f:
-          f.write(repr(json_str))
-      except OSError:
-        pass
+      # try:
+      #   with open("debug_decrypted.txt", "w", encoding="utf-8") as f:
+      #     f.write(repr(json_str))
+      # except OSError:
+      #   pass
 
       # Парсинг JSON
       vault = json_to_vault(json_str)
@@ -66,21 +63,25 @@ class VaultScreen(Screen):
       self.editor.text = json_formatted
       self._update_status_loaded(len(vault.entries))
       self._set_state("loaded")
+
     except FileNotFoundError:
       self._set_state("error")
       self._update_status("Хранилище не найдено. Создайте новое.")
       self.editor.text = ""
       self._set_state("loaded")
+
     except json.JSONDecodeError as e:
       self._set_state("error")
       self._update_status(
         f"Ошибка JSON при расшифровке: строка {e.lineno}, "
         f"колонка {e.colno} (символ {e.pos}). "
-        f"См. debug_decrypted.txt"
+        # f"См. debug_decrypted.txt"
       )
+
     except ConnectionError as e:
       self._set_state("error")
       self._update_status(f"Ошибка: {e}")
+
     except Exception as e:
       self._set_state("error")
       self._update_status(f"Ошибка: {e}")
@@ -107,23 +108,27 @@ class VaultScreen(Screen):
 
     try:
       # DEBUG: записываем JSON, который уходит на шифрование
-      json_for_encrypt = vault_to_json(vault)
+      # json_for_encrypt = vault_to_json(vault)
 
-      try:
-        with open("debug_upload.txt", "w", encoding="utf-8") as f:
-          f.write(repr(json_for_encrypt))
-      except OSError:
-        pass
+      # try:
+      #   with open("debug_upload.txt", "w", encoding="utf-8") as f:
+      #     f.write(repr(json_for_encrypt))
+      # except OSError:
+      #   pass
 
       app = cast("CesarVaultApp", App.get_running_app())
       blob = pack_vault(vault, app.master_password)
+
       upload(blob)
+
       now = datetime.now().strftime("%H:%M")
       self._update_status(f"Сохранено {now} · {len(vault.entries)} записей")
       self._set_state("loaded")
+
     except ConnectionError as e:
       self._set_state("error")
       self._update_status(f"Ошибка: {e}")
+
     except Exception as e:
       self._set_state("error")
       self._update_status(f"Ошибка: {e}")
@@ -160,6 +165,7 @@ class VaultScreen(Screen):
       self.toolbar.add_enabled = False
       self.toolbar.copy_enabled = False
       self.editor.readonly = True
+
       self.editor.text = ""
     elif state == "loaded":
       self.toolbar.download_enabled = True
@@ -167,12 +173,14 @@ class VaultScreen(Screen):
       self.toolbar.add_enabled = True
       self.toolbar.copy_enabled = True
       self.editor.readonly = False
+
     elif state == "loading":
       self.toolbar.download_enabled = False
       self.toolbar.upload_enabled = False
       self.toolbar.add_enabled = False
       self.toolbar.copy_enabled = False
       self.editor.readonly = True
+
     elif state == "error":
       self.toolbar.download_enabled = True
       self.toolbar.upload_enabled = False
@@ -198,7 +206,9 @@ class VaultScreen(Screen):
       try:
         vault = json_to_vault(self.editor.text)
         self._update_status_loaded(len(vault.entries))
+
       except (json.JSONDecodeError, Exception):
         self._update_status("")
+
     else:
       self._update_status("")

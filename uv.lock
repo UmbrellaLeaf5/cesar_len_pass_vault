@@ -14,7 +14,7 @@ wheels = [
 [[package]]
 name = "cesar-len-key"
 version = "0.1.0"
-source = { git = "https://github.com/UmbrellaLeaf5/cesar_len_key#9f6967f14eefd955104495c2d08155f39b803e37" }
+source = { git = "https://github.com/UmbrellaLeaf5/cesar_len_key#052f80626e8a5284e07a03938879e6e8b8b03bd2" }
 
 [[package]]
 name = "cesar-len-pass-vault"
