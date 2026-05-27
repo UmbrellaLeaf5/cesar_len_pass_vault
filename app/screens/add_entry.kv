@@ -7,14 +7,34 @@
   notes_input: notes_input
   error_label: error_label
 
-  title: "Add Entry"
+  title: ""
+  title_size: 0
+  separator_height: 0
   size_hint: 0.85, 0.65
   auto_dismiss: False
 
   BoxLayout:
     orientation: "vertical"
-    padding: 16
-    spacing: 12
+    padding: 14
+    spacing: 10
+
+    Label:
+      text: "Add Entry"
+      font_size: 18
+      bold: True
+      color: 0.9, 0.9, 0.9, 1
+      size_hint_y: None
+      height: 26
+
+    Widget:
+      size_hint_y: None
+      height: 1
+      canvas:
+        Color:
+          rgba: 0.2, 0.5, 0.8, 1
+        Rectangle:
+          pos: self.pos
+          size: self.size
 
     CustomLabel:
       text: "Service"

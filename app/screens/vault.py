@@ -20,6 +20,7 @@ from app.screens.settings_popup import SettingsPopup
 from cesar_len_pass_vault import json_to_vault, pack_vault, unpack_vault, vault_to_json
 from cesar_len_pass_vault.config import config
 from cesar_len_pass_vault.enums import VaultState
+from cesar_len_pass_vault.exceptions import DecryptionError
 from cesar_len_pass_vault.sync import YaConnectionError, download, upload
 
 
@@ -71,11 +72,9 @@ class VaultScreen(Screen):
       self._update_ui_by_state(VaultState.LOADED)
       self.status_label.text = "Vault not found. Create a new one."
 
-    except json.JSONDecodeError as e:
+    except json.JSONDecodeError:
       self._update_ui_by_state(VaultState.ERROR)
-      self.status_label.text = (
-        f"JSON error during decryption: line {e.lineno}, column {e.colno} (char {e.pos})"
-      )
+      self.status_label.text = "Invalid master password"
 
     except YaConnectionError as e:
       self._update_ui_by_state(VaultState.ERROR)
@@ -145,6 +144,7 @@ class VaultScreen(Screen):
     """Загрузить резервную копию хранилища (cipher_wrapper)."""
 
     self._update_ui_by_state(VaultState.LOADING)
+    self.editor.text = ""
 
     try:
       blob = download(path=config.BACKUP_REMOTE_PATH)
@@ -162,6 +162,10 @@ class VaultScreen(Screen):
     except FileNotFoundError:
       self._update_ui_by_state(VaultState.ERROR)
       self.status_label.text = "Backup vault not found"
+
+    except (json.JSONDecodeError, DecryptionError):
+      self._update_ui_by_state(VaultState.ERROR)
+      self.status_label.text = "Invalid master password"
 
     except YaConnectionError as e:
       self._update_ui_by_state(VaultState.ERROR)
