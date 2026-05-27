@@ -1,0 +1,37 @@
+#:kivy 2.3
+
+<SyncPopup>:
+  title: ""
+  size_hint: 0.65, 0.35
+  auto_dismiss: True
+
+  BoxLayout:
+    orientation: "vertical"
+    padding: 16
+    spacing: 12
+
+    Label:
+      text: "Editors differ.\nWhich version to upload?"
+      halign: "center"
+      font_size: 16
+      color: 0.9, 0.9, 0.9, 1
+
+    BoxLayout:
+      size_hint_y: None
+      height: 48
+      spacing: 12
+
+      CustomButton:
+        text: "Primary"
+        background_color: 0.2, 0.5, 0.8, 1
+        on_release: root.choose_primary()
+
+      CustomButton:
+        text: "Backup"
+        background_color: 0.5, 0.2, 0.8, 1
+        on_release: root.choose_backup()
+
+      CustomButton:
+        text: "Cancel"
+        background_color: 0.4, 0.4, 0.4, 1
+        on_release: root.choose_cancel()

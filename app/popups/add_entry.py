@@ -3,13 +3,10 @@
 """
 
 import json
-from typing import cast
 
-from kivy.app import App
 from kivy.lang import Builder
 from kivy.properties import ObjectProperty
 from kivy.uix.popup import Popup
-from kivy.uix.screenmanager import ScreenManager
 
 from cesar_len_pass_vault import PasswordEntry
 
@@ -27,6 +24,8 @@ class AddEntryPopup(Popup):
   password_input = ObjectProperty(None)
   notes_input = ObjectProperty(None)
   error_label = ObjectProperty(None)
+
+  target_editor = ObjectProperty(None)
 
   def save(self) -> None:
     """Валидирует поля и вставляет запись в JSON редактора."""
@@ -49,14 +48,9 @@ class AddEntryPopup(Popup):
       notes=notes,
     )
 
-    app = App.get_running_app()
+    assert self.target_editor is not None
 
-    assert app is not None
-
-    sm = cast(ScreenManager, app.root)
-
-    vault_screen = sm.get_screen("vault")
-    current_json = vault_screen.editor.text.strip()
+    current_json = self.target_editor.text.strip()
 
     if current_json:
       try:
@@ -80,7 +74,7 @@ class AddEntryPopup(Popup):
       }
     )
 
-    vault_screen.editor.text = json.dumps(data, ensure_ascii=False, indent=2)
+    self.target_editor.text = json.dumps(data, ensure_ascii=False, indent=2)
 
     self.dismiss()
 

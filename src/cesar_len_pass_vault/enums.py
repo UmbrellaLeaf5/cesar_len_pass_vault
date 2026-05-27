@@ -8,6 +8,7 @@ from enum import Enum
 class VaultState(Enum):
   """Состояния экрана хранилища."""
 
+  EMPTY = "empty"
   LOADED = "loaded"
   LOADING = "loading"
-  ERROR = "error"
+  SPLIT = "split"

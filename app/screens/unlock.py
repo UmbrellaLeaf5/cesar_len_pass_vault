@@ -33,6 +33,15 @@ class UnlockScreen(Screen):
 
   _bg_color = ListProperty([0, 0, 0, 1])  # Чёрный по умолчанию
 
+  def on_enter(self, *args: object) -> None:
+    self.password_input.text = ""
+    self.error_label.text = ""
+    self.error_label.opacity = 0
+    self._bg_color = [0, 0, 0, 1]  # Сброс фона к чёрному
+    self.password_input.focus = True
+
+    cast("CesarVaultApp", App.get_running_app()).master_password = ""
+
   def unlock(self) -> None:
     """Обработчик нажатия кнопки Unlock."""
 
@@ -77,14 +86,3 @@ class UnlockScreen(Screen):
     self._bg_color = [0.4, 0.05, 0.05, 1]  # Бледно-красный
     self.error_label.opacity = 1
     self.error_label.text = error_text
-
-  def on_enter(self, *args: object) -> None:
-    """Сброс состояния при входе на экран."""
-
-    self.password_input.text = ""
-    self.error_label.text = ""
-    self.error_label.opacity = 0
-    self._bg_color = [0, 0, 0, 1]  # Сброс фона к чёрному
-    self.password_input.focus = True
-
-    cast("CesarVaultApp", App.get_running_app()).master_password = ""
