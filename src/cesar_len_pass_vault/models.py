@@ -25,4 +25,3 @@ class Vault:
   """
 
   entries: list[PasswordEntry] = field(default_factory=list)
-  version: int = 1

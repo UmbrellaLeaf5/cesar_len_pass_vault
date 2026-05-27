@@ -5,39 +5,23 @@
 Ключ растягивается через SHA-256 × 100k + соль (как в cipher_wrapper).
 """
 
-import hashlib
 import os
 import struct
 
 from cesar_len_key.cryptor import DEFAULT_ALPHABET, CryptedLines
 from cesar_len_key.word_cryption import CryptType
 
+from cesar_len_pass_vault.crypto_utils import (
+  HEADER_FORMAT,
+  SALT_SIZE,
+  DecryptionError,
+  _derive_key,
+  get_body,
+  validate_and_parse_header,
+)
 
-SALT_SIZE = 32
-ITERATIONS = 100_000
+
 MAGIC = b"CESAR_PRIMARY_V1"
-HEADER_FORMAT = ">16s32s"
-
-
-class DecryptionError(Exception):
-  """
-  Ошибка расшифрования: неверный пароль или повреждённые данные.
-  """
-
-  pass
-
-
-def _derive_key(master_password: str, salt: bytes) -> bytes:
-  """
-  Растяжение ключа: SHA-256(password + salt) × ITERATIONS итераций.
-  """
-
-  key = master_password.encode("utf-8") + salt
-
-  for _ in range(ITERATIONS):
-    key = hashlib.sha256(key).digest()
-
-  return key
 
 
 def encrypt_vault_primary(vault_json: str, master_password: str) -> bytes:
@@ -54,7 +38,7 @@ def encrypt_vault_primary(vault_json: str, master_password: str) -> bytes:
     master_password: мастер-пароль пользователя
 
   Returns:
-    Зашифрованный блоб (MAGIC + salt + ciphertext)
+    Зашифрованный блоб (MAGIC + salt + cipher_text)
   """
 
   salt = os.urandom(SALT_SIZE)
@@ -64,8 +48,8 @@ def encrypt_vault_primary(vault_json: str, master_password: str) -> bytes:
   encrypted_lines = CryptedLines(
     [vault_json], key_hex, alphabet=DEFAULT_ALPHABET, crypt_type=CryptType.encr
   )
-  ciphertext = encrypted_lines[0]
-  body = ciphertext.encode("utf-8")
+  cipher_text = encrypted_lines[0]
+  body = cipher_text.encode("utf-8")
   header = struct.pack(HEADER_FORMAT, MAGIC, salt)
 
   return header + body
@@ -76,7 +60,7 @@ def decrypt_vault_primary(encrypted_blob: bytes, master_password: str) -> str:
   Расшифровывает блоб через CryptedLines.
 
   Args:
-    encrypted_blob: сырые байты (MAGIC + salt + ciphertext)
+    encrypted_blob: сырые байты (MAGIC + salt + cipher_text)
     master_password: мастер-пароль пользователя
 
   Returns:
@@ -87,27 +71,18 @@ def decrypt_vault_primary(encrypted_blob: bytes, master_password: str) -> str:
     DecryptionError: если неверный пароль
   """
 
-  header_size = struct.calcsize(HEADER_FORMAT)
-
-  if len(encrypted_blob) < header_size:
-    raise ValueError("Blob too short")
-
-  magic, salt = struct.unpack(HEADER_FORMAT, encrypted_blob[:header_size])
-
-  if magic != MAGIC:
-    raise ValueError("Invalid file format (expected primary)")
-
-  body = encrypted_blob[header_size:]
+  salt = validate_and_parse_header(encrypted_blob, MAGIC)
+  body = get_body(encrypted_blob)
   stretched_key = _derive_key(master_password, salt)
   key_hex = stretched_key.hex()
 
   try:
-    ciphertext = body.decode("utf-8")
+    cipher_text = body.decode("utf-8")
   except UnicodeDecodeError:
     raise DecryptionError("Invalid master password or corrupted file") from None
 
   decrypted_lines = CryptedLines(
-    [ciphertext], key_hex, alphabet=DEFAULT_ALPHABET, crypt_type=CryptType.decr
+    [cipher_text], key_hex, alphabet=DEFAULT_ALPHABET, crypt_type=CryptType.decr
   )
   plaintext = decrypted_lines[0]
 

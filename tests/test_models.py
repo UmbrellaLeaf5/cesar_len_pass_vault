@@ -27,12 +27,11 @@ def test_password_entry_with_notes() -> None:
 
 
 def test_create_empty_vault() -> None:
-  """Vault() создаётся с пустым списком записей и version=1."""
+  """Vault() создаётся с пустым списком записей."""
 
   vault = Vault()
 
   assert vault.entries == []
-  assert vault.version == 1
 
 
 def test_vault_with_entries() -> None:
@@ -48,11 +47,3 @@ def test_vault_with_entries() -> None:
 
   assert len(vault.entries) == 3
   assert vault.entries[1].service == "b"
-
-
-def test_vault_custom_version() -> None:
-  """Vault с указанием версии."""
-
-  vault = Vault(version=2)
-
-  assert vault.version == 2

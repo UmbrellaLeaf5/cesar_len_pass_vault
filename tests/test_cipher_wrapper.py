@@ -32,7 +32,7 @@ def test_encrypt_decrypt_roundtrip() -> None:
   assert result == original
 
 
-def test_different_passwords_different_ciphertext() -> None:
+def test_different_passwords_different_cipher_text() -> None:
   """Одинаковый JSON с разными паролями даёт разные блобы."""
 
   json_str = '{"test": 1}'
@@ -133,7 +133,7 @@ def test_wrong_magic_raises() -> None:
   bad_magic = b"BAD_MAGIC_HEADER"
   salt = b"\x00" * 32
   header = struct.pack(">16s32s", bad_magic, salt)
-  body = b"some_ciphertext"
+  body = b"some_cipher_text"
 
   try:
     decrypt_vault(header + body, "pw")
@@ -320,7 +320,6 @@ def test_vault_json_with_colon_and_special_chars() -> None:
   # Проверяем что результат парсится как JSON
   data = json.loads(result)
 
-  assert data["version"] == 1
   assert len(data["entries"]) == 2
   assert data["entries"][0]["service"] == "gmail"
   assert data["entries"][0]["password"] == "my-password:123"

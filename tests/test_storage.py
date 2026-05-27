@@ -23,7 +23,6 @@ def test_vault_to_json_empty() -> None:
 
   data = json.loads(result)
 
-  assert data["version"] == 1
   assert data["entries"] == []
 
 
@@ -48,10 +47,9 @@ def test_vault_to_json_with_entries() -> None:
 def test_json_to_vault_empty() -> None:
   """JSON без записей → Vault с пустым списком."""
 
-  json_str = '{"version": 1, "entries": []}'
+  json_str = '{"entries": []}'
   vault = json_to_vault(json_str)
 
-  assert vault.version == 1
   assert vault.entries == []
 
 
@@ -60,7 +58,6 @@ def test_json_to_vault_with_entries() -> None:
 
   json_str = """
   {
-    "version": 1,
     "entries": [
       {"service": "gmail", "login": "user", "password": "abc", "notes": ""},
       {"service": "github", "login": "dev", "password": "xyz", "notes": "2FA"}
@@ -96,15 +93,12 @@ def test_vault_to_json_roundtrip() -> None:
     assert orig.password == rest.password
     assert orig.notes == rest.notes
 
-  assert restored.version == original.version
-
 
 def test_json_missing_optional_fields() -> None:
   """JSON без поля notes → notes пустая строка."""
 
   json_str = """
   {
-    "version": 1,
     "entries": [
       {"service": "gmail", "login": "user", "password": "abc"}
     ]
@@ -116,21 +110,11 @@ def test_json_missing_optional_fields() -> None:
   assert vault.entries[0].notes == ""
 
 
-def test_json_missing_version() -> None:
-  """JSON без поля version → version = 1 (по умолчанию)."""
-
-  json_str = '{"entries": []}'
-  vault = json_to_vault(json_str)
-
-  assert vault.version == 1
-
-
 def test_json_unknown_fields_ignored() -> None:
   """JSON с неизвестными полями → парсится без ошибок, поля игнорируются."""
 
   json_str = """
   {
-    "version": 1,
     "entries": [
       {"service": "gmail", "login": "user", "password": "abc", "foo": "bar"}
     ],
@@ -154,7 +138,7 @@ def test_invalid_json_raises() -> None:
 def test_empty_entries_list() -> None:
   """JSON с "entries": [] → Vault с 0 записей."""
 
-  vault = json_to_vault('{"version": 1, "entries": []}')
+  vault = json_to_vault('{"entries": []}')
 
   assert len(vault.entries) == 0
 
@@ -214,8 +198,6 @@ def test_pack_unpack_roundtrip() -> None:
     assert orig.password == rest.password
     assert orig.notes == rest.notes
 
-  assert restored.version == original.version
-
 
 def test_pack_unpack_empty_vault() -> None:
   """pack/unpack пустого Vault."""
@@ -225,4 +207,3 @@ def test_pack_unpack_empty_vault() -> None:
   restored = unpack_vault(blob, "pw")
 
   assert restored.entries == []
-  assert restored.version == 1

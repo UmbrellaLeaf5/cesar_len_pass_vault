@@ -1,13 +1,20 @@
 {
   "python-envs.defaultEnvManager": "ms-python.python:venv",
   "cSpell.words": [
+    "cryptor",
     "halign",
     "kivy",
     "screenmanager",
+    "subkey",
+    "urandom",
     "блоб",
     "Валидирует",
+    "Многораундовое",
     "многострочность",
+    "недетерминизм",
+    "подключ",
     "подключа",
+    "подключами",
     "Попап",
     "разблокировочном",
     "расшифрования"

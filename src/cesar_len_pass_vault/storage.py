@@ -20,7 +20,6 @@ def vault_to_json(vault: Vault) -> str:
 
   Формат JSON:
   {
-    "version": 1,
     "entries": [
       {
         "service": "gmail",
@@ -34,7 +33,6 @@ def vault_to_json(vault: Vault) -> str:
   """
 
   data = {
-    "version": vault.version,
     "entries": [
       {
         "service": e.service,
@@ -72,10 +70,7 @@ def json_to_vault(json_str: str) -> Vault:
       )
     )
 
-  return Vault(
-    entries=entries,
-    version=data.get("version", 1),
-  )
+  return Vault(entries=entries)
 
 
 def pack_vault(vault: Vault, master_password: str) -> bytes:

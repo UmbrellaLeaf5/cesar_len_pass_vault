@@ -18,36 +18,18 @@ import struct
 from cesar_len_key.alphabet_shuffle import ShuffledAlphabet
 from cesar_len_key.cryptor import DEFAULT_ALPHABET
 
+from cesar_len_pass_vault.crypto_utils import (
+  HEADER_FORMAT,
+  SALT_SIZE,
+  DecryptionError,
+  _derive_key,
+  get_body,
+  validate_and_parse_header,
+)
 
-SALT_SIZE = 32
-ITERATIONS = 100_000
+
 ROUNDS = 3
 MAGIC = b"CESAR_VAULT_V001"
-HEADER_FORMAT = ">16s32s"
-
-
-class DecryptionError(Exception):
-  """
-  Ошибка расшифрования: неверный пароль или повреждённые данные.
-  """
-
-  pass
-
-
-def _derive_key(master_password: str, salt: bytes) -> bytes:
-  """
-  Растяжение ключа: SHA-256(password + salt) × ITERATIONS итераций.
-
-  Не использует PBKDF2 (не хотим зависеть от hashlib.pbkdf2_hmac),
-  реализуем вручную для полного контроля и прозрачности.
-  """
-
-  key = master_password.encode("utf-8") + salt
-
-  for _ in range(ITERATIONS):
-    key = hashlib.sha256(key).digest()
-
-  return key
 
 
 def _subkey(parent_key: bytes, round_num: int) -> str:
@@ -88,10 +70,7 @@ def _compute_shift(subkey: str, position: int, alph_len: int) -> int:
   raw_shift = int.from_bytes(hash_bytes[:4], "big")
   shift = raw_shift % alph_len
 
-  if shift == 0:
-    shift = 1
-
-  return shift
+  return shift if shift != 0 else 1
 
 
 def _caesar_shift(char: str, shift: int, alph: str, decrypt: bool = False) -> str:
@@ -157,14 +136,14 @@ def _encrypt_text(text: str, key: bytes, rounds: int = ROUNDS) -> str:
   return result
 
 
-def _decrypt_text(ciphertext: str, key: bytes, rounds: int = ROUNDS) -> str:
+def _decrypt_text(cipher_text: str, key: bytes, rounds: int = ROUNDS) -> str:
   """
   Многораундовое расшифрование (обратное _encrypt_text).
 
   Раунды идут в обратном порядке, операция сдвига — обратная.
   """
 
-  result = ciphertext
+  result = cipher_text
 
   for round_num in range(rounds - 1, -1, -1):
     subkey = _subkey(key, round_num)
@@ -191,13 +170,13 @@ def encrypt_vault(vault_json: str, master_password: str) -> bytes:
     master_password: мастер-пароль пользователя
 
   Returns:
-    Зашифрованный блоб (MAGIC + salt + ciphertext), готовый к загрузке на Диск
+    Зашифрованный блоб (MAGIC + salt + cipher_text), готовый к загрузке на Диск
   """
 
   salt = os.urandom(SALT_SIZE)
   stretched_key = _derive_key(master_password, salt)
-  ciphertext = _encrypt_text(vault_json, stretched_key)
-  body = ciphertext.encode("utf-8")
+  cipher_text = _encrypt_text(vault_json, stretched_key)
+  body = cipher_text.encode("utf-8")
   header = struct.pack(HEADER_FORMAT, MAGIC, salt)
 
   return header + body
@@ -208,7 +187,7 @@ def decrypt_vault(encrypted_blob: bytes, master_password: str) -> str:
   Расшифровывает блоб, полученный с Яндекс.Диска.
 
   Args:
-    encrypted_blob: сырые байты (MAGIC + salt + ciphertext)
+    encrypted_blob: сырые байты (MAGIC + salt + cipher_text)
     master_password: мастер-пароль пользователя
 
   Returns:
@@ -219,23 +198,16 @@ def decrypt_vault(encrypted_blob: bytes, master_password: str) -> str:
     DecryptionError: если неверный мастер-пароль
   """
 
-  if len(encrypted_blob) < struct.calcsize(HEADER_FORMAT):
-    raise ValueError("Blob too short")
-
-  magic, salt = struct.unpack(HEADER_FORMAT, encrypted_blob[:48])
-
-  if magic != MAGIC:
-    raise ValueError("Invalid file format")
-
-  body = encrypted_blob[48:]
+  salt = validate_and_parse_header(encrypted_blob, MAGIC)
+  body = get_body(encrypted_blob)
   stretched_key = _derive_key(master_password, salt)
 
   try:
-    ciphertext = body.decode("utf-8")
+    cipher_text = body.decode("utf-8")
 
   except UnicodeDecodeError:
     raise DecryptionError("Invalid master password or corrupted file") from None
 
-  plaintext = _decrypt_text(ciphertext, stretched_key)
+  plaintext = _decrypt_text(cipher_text, stretched_key)
 
   return plaintext
