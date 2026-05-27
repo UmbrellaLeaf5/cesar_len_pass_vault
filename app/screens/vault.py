@@ -15,9 +15,12 @@ from kivy.uix.screenmanager import Screen
 if TYPE_CHECKING:
   from app.main import CesarVaultApp
 
-from cesar_len_pass_vault import unpack_vault, vault_to_json
+from app.screens.add_entry import AddEntryPopup
+from app.screens.settings_popup import SettingsPopup
+from cesar_len_pass_vault import json_to_vault, pack_vault, unpack_vault, vault_to_json
+from cesar_len_pass_vault.config import config
 from cesar_len_pass_vault.enums import VaultState
-from cesar_len_pass_vault.sync import YaConnectionError, download
+from cesar_len_pass_vault.sync import YaConnectionError, download, upload
 
 
 Builder.load_file("app/screens/vault.kv")
@@ -73,6 +76,92 @@ class VaultScreen(Screen):
       self.status_label.text = (
         f"JSON error during decryption: line {e.lineno}, column {e.colno} (char {e.pos})"
       )
+
+    except YaConnectionError as e:
+      self._update_ui_by_state(VaultState.ERROR)
+      self.status_label.text = f"Connection error: {e}"
+
+    except Exception as e:
+      self._update_ui_by_state(VaultState.ERROR)
+      self.status_label.text = f"Error: {e}"
+
+  def upload(self) -> None:
+    """Зашифровать содержимое редактора и загрузить на Яндекс.Диск."""
+
+    json_str = self.editor.text.strip()
+
+    if not json_str:
+      self.status_label.text = "Nothing to upload: editor is empty"
+      return
+
+    try:
+      vault = json_to_vault(json_str)
+
+    except json.JSONDecodeError as e:
+      self.status_label.text = f"JSON error: line {e.lineno}, column {e.colno}"
+      return
+
+    self._update_ui_by_state(VaultState.LOADING)
+
+    try:
+      app = cast("CesarVaultApp", App.get_running_app())
+      pw = app.master_password
+
+      # Основное хранилище - шифрование через cesar_len_key
+      primary_blob = pack_vault(vault, pw, primary=True)
+      upload(primary_blob)
+
+      # Резервная копия - шифрование через cipher_wrapper
+      backup_blob = pack_vault(vault, pw, primary=False)
+      upload(backup_blob, path=config.BACKUP_REMOTE_PATH)
+
+      self._update_ui_by_state(VaultState.LOADED)
+      self.status_label.text = (
+        f"Saved {datetime.now().strftime('%H:%M')} - {len(vault.entries)} entries"
+      )
+
+    except YaConnectionError as e:
+      self._update_ui_by_state(VaultState.ERROR)
+      self.status_label.text = f"Connection error: {e}"
+
+    except Exception as e:
+      self._update_ui_by_state(VaultState.ERROR)
+      self.status_label.text = f"Error: {e}"
+
+  def add_entry(self) -> None:
+    """Открыть попап добавления записи."""
+
+    popup = AddEntryPopup()
+    popup.open()
+
+  def open_settings(self) -> None:
+    """Открыть попап с настройками."""
+
+    popup = SettingsPopup()
+    popup.backup_callback = self._download_backup
+    popup.open()
+
+  def _download_backup(self) -> None:
+    """Загрузить резервную копию хранилища (cipher_wrapper)."""
+
+    self._update_ui_by_state(VaultState.LOADING)
+
+    try:
+      blob = download(path=config.BACKUP_REMOTE_PATH)
+
+      app = cast("CesarVaultApp", App.get_running_app())
+
+      vault = unpack_vault(blob, app.master_password, primary=False)
+      self.editor.text = vault_to_json(vault)
+
+      self._update_ui_by_state(VaultState.LOADED)
+      self.status_label.text = (
+        f"Loaded backup {datetime.now().strftime('%H:%M')} - {len(vault.entries)} entries"
+      )
+
+    except FileNotFoundError:
+      self._update_ui_by_state(VaultState.ERROR)
+      self.status_label.text = "Backup vault not found"
 
     except YaConnectionError as e:
       self._update_ui_by_state(VaultState.ERROR)

@@ -14,9 +14,9 @@
       id: toolbar
       size_hint_y: None
       height: 48
-      download_enabled: root._state in ("empty", "loaded", "error")
-      upload_enabled: root._state == "loaded"
-      add_enabled: root._state == "loaded"
+      download_enabled: root._state.value in ("loaded", "error")
+      upload_enabled: root._state.value == "loaded"
+      add_enabled: root._state.value == "loaded"
 
       BoxLayout:
         spacing: 4
