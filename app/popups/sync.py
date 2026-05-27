@@ -34,6 +34,6 @@ class SyncPopup(Popup):
     self.dismiss()
 
   def choose_cancel(self) -> None:
-    """Отмена — ничего не делаем."""
+    """Отмена - ничего не делаем."""
 
     self.dismiss()

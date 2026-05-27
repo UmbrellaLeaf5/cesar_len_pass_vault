@@ -142,7 +142,7 @@ class VaultScreen(Screen):
       self.status_label.text = f"JSON error: line {e.lineno}, column {e.colno}"
       return
 
-    # В split режиме — валидируем и backup редактор
+    # В split режиме - валидируем и backup редактор
     is_split = self._state == VaultState.SPLIT
     backup_vault: Vault | None = None
 

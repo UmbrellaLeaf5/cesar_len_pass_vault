@@ -24,8 +24,18 @@ class AddEntryPopup(Popup):
   password_input = ObjectProperty(None)
   notes_input = ObjectProperty(None)
   error_label = ObjectProperty(None)
-
   target_editor = ObjectProperty(None)
+
+  def on_open(self) -> None:
+    """Сброс полей при открытии."""
+
+    self.service_input.text = ""
+    self.login_input.text = ""
+    self.password_input.text = ""
+    self.notes_input.text = ""
+    self.error_label.text = ""
+    self.error_label.opacity = 0
+    self.service_input.focus = True
 
   def save(self) -> None:
     """Валидирует поля и вставляет запись в JSON редактора."""
@@ -48,8 +58,6 @@ class AddEntryPopup(Popup):
       notes=notes,
     )
 
-    assert self.target_editor is not None
-
     current_json = self.target_editor.text.strip()
 
     if current_json:
@@ -63,7 +71,7 @@ class AddEntryPopup(Popup):
         return
 
     else:
-      data = {"version": 1, "entries": []}
+      data = {"entries": []}
 
     data.setdefault("entries", []).append(
       {
@@ -77,14 +85,3 @@ class AddEntryPopup(Popup):
     self.target_editor.text = json.dumps(data, ensure_ascii=False, indent=2)
 
     self.dismiss()
-
-  def on_open(self) -> None:
-    """Сброс полей при открытии."""
-
-    self.service_input.text = ""
-    self.login_input.text = ""
-    self.password_input.text = ""
-    self.notes_input.text = ""
-    self.error_label.text = ""
-    self.error_label.opacity = 0
-    self.service_input.focus = True

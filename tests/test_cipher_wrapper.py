@@ -24,7 +24,7 @@ from cesar_len_pass_vault.storage import vault_to_json
 def test_encrypt_decrypt_roundtrip() -> None:
   """decrypt_vault(encrypt_vault(json, pw), pw) == json."""
 
-  original = '{"version": 1, "entries": []}'
+  original = '{"entries": []}'
 
   blob = encrypt_vault_backup(original, "master123")
   result = decrypt_vault_backup(blob, "master123")
