@@ -23,19 +23,19 @@
         padding: 2
 
         CustomButton:
-          text: "Скачать"
+          text: "Download"
           disabled: not toolbar.download_enabled
           opacity: 1 if toolbar.download_enabled else 0.4
           on_release: root.download()
 
         CustomButton:
-          text: "Загрузить"
+          text: "Upload"
           disabled: not toolbar.upload_enabled
           opacity: 1 if toolbar.upload_enabled else 0.4
           on_release: root.upload()
 
         CustomButton:
-          text: "+ Запись"
+          text: "+ Entry"
           disabled: not toolbar.add_enabled
           opacity: 1 if toolbar.add_enabled else 0.4
           on_release: root.add_entry()
@@ -56,7 +56,7 @@
 
     CustomLabel:
       id: status_label
-      text: "Не загружено"
+      text: "Not loaded"
       font_size: 15
       color: 0.6, 0.6, 0.6, 1
       size_hint_y: None

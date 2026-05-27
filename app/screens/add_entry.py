@@ -37,7 +37,7 @@ class AddEntryPopup(Popup):
     notes = self.notes_input.text
 
     if not service or not login:
-      self.error_label.text = "Сервис и логин обязательны"
+      self.error_label.text = "Service and login are required"
       self.error_label.opacity = 1
 
       return
@@ -63,7 +63,7 @@ class AddEntryPopup(Popup):
         data = json.loads(current_json)
 
       except json.JSONDecodeError:
-        self.error_label.text = "Ошибка JSON в редакторе"
+        self.error_label.text = "JSON error in editor"
         self.error_label.opacity = 1
 
         return

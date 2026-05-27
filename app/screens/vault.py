@@ -62,32 +62,31 @@ class VaultScreen(Screen):
 
     except FileNotFoundError:
       self._set_state("error")
-      self._update_status("Хранилище не найдено. Создайте новое.")
+      self._update_status("Vault not found. Create a new one.")
       self.editor.text = ""
       self._set_state("loaded")
 
     except json.JSONDecodeError as e:
       self._set_state("error")
       self._update_status(
-        f"Ошибка JSON при расшифровке: "
-        f"строка {e.lineno}, колонка {e.colno} (символ {e.pos})"
+        f"JSON error during decryption: line {e.lineno}, column {e.colno} (char {e.pos})"
       )
 
     except ConnectionError as e:
       self._set_state("error")
-      self._update_status(f"Ошибка: {e}")
+      self._update_status(f"Error: {e}")
 
     except Exception as e:
       self._set_state("error")
-      self._update_status(f"Ошибка: {e}")
+      self._update_status(f"Error: {e}")
 
   def upload(self) -> None:
-    """Зашифровать редактор и загрузить на Яндекс.Диск."""
+    """Encrypt editor content and upload to Yandex Disk."""
 
     json_str = self.editor.text.strip()
 
     if not json_str:
-      self._update_status("Нечего сохранять: редактор пуст")
+      self._update_status("Nothing to save: editor is empty")
 
       return
 
@@ -95,7 +94,7 @@ class VaultScreen(Screen):
       vault = json_to_vault(json_str)
 
     except json.JSONDecodeError as e:
-      self._update_status(f"Ошибка JSON: строка {e.lineno}, колонка {e.colno}")
+      self._update_status(f"JSON error: line {e.lineno}, column {e.colno}")
 
       return
 
@@ -117,16 +116,16 @@ class VaultScreen(Screen):
         pass  # ошибка резервной копии некритична
 
       now = datetime.now().strftime("%H:%M")
-      self._update_status(f"Сохранено {now} · {len(vault.entries)} записей")
+      self._update_status(f"Saved {now} · {len(vault.entries)} entries")
       self._set_state("loaded")
 
     except ConnectionError as e:
       self._set_state("error")
-      self._update_status(f"Ошибка: {e}")
+      self._update_status(f"Error: {e}")
 
     except Exception as e:
       self._set_state("error")
-      self._update_status(f"Ошибка: {e}")
+      self._update_status(f"Error: {e}")
 
   def add_entry(self) -> None:
     """Открыть попап добавления записи."""
@@ -140,7 +139,7 @@ class VaultScreen(Screen):
     content = BoxLayout(orientation="vertical", padding=12, spacing=8)
 
     load_btn = Button(
-      text="Загрузить резервную копию",
+      text="Load Backup Vault",
       size_hint_y=None,
       height=48,
       background_normal="",
@@ -151,7 +150,7 @@ class VaultScreen(Screen):
 
     content.add_widget(
       Label(
-        text="Настройки",
+        text="Settings",
         size_hint_y=None,
         height=32,
         color=(0.9, 0.9, 0.9, 1),
@@ -185,15 +184,15 @@ class VaultScreen(Screen):
 
     except FileNotFoundError:
       self._set_state("error")
-      self._update_status("Резервная копия не найдена")
+      self._update_status("Backup vault not found")
 
     except ConnectionError as e:
       self._set_state("error")
-      self._update_status(f"Ошибка: {e}")
+      self._update_status(f"Error: {e}")
 
     except Exception as e:
       self._set_state("error")
-      self._update_status(f"Ошибка: {e}")
+      self._update_status(f"Error: {e}")
 
   def _set_state(self, state: str) -> None:
     """Переключить состояние экрана и обновить UI."""
@@ -235,4 +234,4 @@ class VaultScreen(Screen):
     """Обновить статус-бар после загрузки."""
 
     now = datetime.now().strftime("%H:%M")
-    self.status_label.text = f"Загружено {now} · {entry_count} записей"
+    self.status_label.text = f"Loaded {now} · {entry_count} entries"

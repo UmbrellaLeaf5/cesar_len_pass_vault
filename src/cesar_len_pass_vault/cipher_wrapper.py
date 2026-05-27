@@ -220,12 +220,12 @@ def decrypt_vault(encrypted_blob: bytes, master_password: str) -> str:
   """
 
   if len(encrypted_blob) < struct.calcsize(HEADER_FORMAT):
-    raise ValueError("Слишком короткий блоб")
+    raise ValueError("Blob too short")
 
   magic, salt = struct.unpack(HEADER_FORMAT, encrypted_blob[:48])
 
   if magic != MAGIC:
-    raise ValueError("Неверный формат файла")
+    raise ValueError("Invalid file format")
 
   body = encrypted_blob[48:]
   stretched_key = _derive_key(master_password, salt)
@@ -234,7 +234,7 @@ def decrypt_vault(encrypted_blob: bytes, master_password: str) -> str:
     ciphertext = body.decode("utf-8")
 
   except UnicodeDecodeError:
-    raise DecryptionError("Неверный мастер-пароль или файл повреждён") from None
+    raise DecryptionError("Invalid master password or corrupted file") from None
 
   plaintext = _decrypt_text(ciphertext, stretched_key)
 

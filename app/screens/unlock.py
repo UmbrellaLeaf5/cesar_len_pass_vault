@@ -31,7 +31,7 @@ class UnlockScreen(Screen):
     password = self.password_input.text.strip()
 
     if not password:
-      self.error_label.text = "Введите пароль"
+      self.error_label.text = "Enter password"
       self.error_label.opacity = 1
 
       return

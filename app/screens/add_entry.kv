@@ -7,7 +7,7 @@
   notes_input: notes_input
   error_label: error_label
 
-  title: "Добавить запись"
+  title: "Add Entry"
   size_hint: 0.85, 0.65
   auto_dismiss: False
 
@@ -17,7 +17,7 @@
     spacing: 12
 
     CustomLabel:
-      text: "Сервис"
+      text: "Service"
       halign: "left"
       size_hint_y: None
       height: 20
@@ -30,7 +30,7 @@
       write_tab: False
 
     CustomLabel:
-      text: "Логин"
+      text: "Login"
       halign: "left"
       size_hint_y: None
       height: 20
@@ -43,7 +43,7 @@
       write_tab: False
 
     CustomLabel:
-      text: "Пароль"
+      text: "Password"
       halign: "left"
       size_hint_y: None
       height: 20
@@ -57,7 +57,7 @@
       write_tab: False
 
     CustomLabel:
-      text: "Заметки"
+      text: "Notes"
       halign: "left"
       size_hint_y: None
       height: 20
@@ -83,10 +83,10 @@
       spacing: 12
 
       CustomButton:
-        text: "Отмена"
+        text: "Cancel"
         background_color: 0.4, 0.4, 0.4, 1
         on_release: root.dismiss()
 
       CustomButton:
-        text: "Сохранить"
+        text: "Save"
         on_release: root.save()

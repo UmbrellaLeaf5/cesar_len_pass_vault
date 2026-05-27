@@ -90,12 +90,12 @@ def decrypt_vault_primary(encrypted_blob: bytes, master_password: str) -> str:
   header_size = struct.calcsize(HEADER_FORMAT)
 
   if len(encrypted_blob) < header_size:
-    raise ValueError("Слишком короткий блоб")
+    raise ValueError("Blob too short")
 
   magic, salt = struct.unpack(HEADER_FORMAT, encrypted_blob[:header_size])
 
   if magic != MAGIC:
-    raise ValueError("Неверный формат файла (ожидается primary)")
+    raise ValueError("Invalid file format (expected primary)")
 
   body = encrypted_blob[header_size:]
   stretched_key = _derive_key(master_password, salt)
@@ -104,7 +104,7 @@ def decrypt_vault_primary(encrypted_blob: bytes, master_password: str) -> str:
   try:
     ciphertext = body.decode("utf-8")
   except UnicodeDecodeError:
-    raise DecryptionError("Неверный мастер-пароль или файл повреждён") from None
+    raise DecryptionError("Invalid master password or corrupted file") from None
 
   decrypted_lines = CryptedLines(
     [ciphertext], key_hex, alphabet=DEFAULT_ALPHABET, crypt_type=CryptType.decr

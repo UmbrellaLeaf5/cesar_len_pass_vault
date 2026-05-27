@@ -29,7 +29,7 @@ def get_client() -> yadisk.YaDisk:
   y = yadisk.YaDisk(token=YA_TOKEN)
 
   if not y.check_token():
-    raise ConnectionError("Неверный токен Яндекс.Диска. Проверьте YA_TOKEN в .env")
+    raise ConnectionError("Invalid Yandex Disk token. Check YA_TOKEN in .env")
 
   return y
 
@@ -51,7 +51,7 @@ def upload(encrypted_blob: bytes, path: str | None = None) -> None:
     raise
 
   except YaDiskError as e:
-    raise ConnectionError(f"Ошибка загрузки на Диск: {e}") from e
+    raise ConnectionError(f"Upload error: {e}") from e
 
 
 def download(path: str | None = None) -> bytes:
@@ -73,11 +73,11 @@ def download(path: str | None = None) -> bytes:
 
   except PathNotFoundError:
     raise FileNotFoundError(
-      "Хранилище не найдено на Диске. Возможно, оно ещё не создано."
+      "Vault not found on Disk. It may not be created yet."
     ) from None
 
   except YaDiskError as e:
-    raise ConnectionError(f"Ошибка скачивания с Диска: {e}") from e
+    raise ConnectionError(f"Download error: {e}") from e
 
 
 def check_connection() -> bool:
@@ -110,4 +110,4 @@ def delete_remote(path: str | None = None) -> None:
   except PathNotFoundError:
     pass
   except YaDiskError as e:
-    raise ConnectionError(f"Ошибка удаления с Диска: {e}") from e
+    raise ConnectionError(f"Delete error: {e}") from e
