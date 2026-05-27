@@ -21,11 +21,11 @@ from cesar_len_key.cryptor import DEFAULT_ALPHABET
 from cesar_len_pass_vault.config import config
 from cesar_len_pass_vault.crypto_utils import (
   HEADER_FORMAT,
-  DecryptionError,
   _derive_key,
   get_body,
   validate_and_parse_header,
 )
+from cesar_len_pass_vault.exceptions import DecryptionError
 
 
 def _subkey(parent_key: bytes, round_num: int) -> str:

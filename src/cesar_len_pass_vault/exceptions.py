@@ -1,0 +1,19 @@
+"""
+Исключения приложения.
+"""
+
+
+class YaConnectionError(Exception):
+  """
+  Ошибка подключения к Яндекс.Диску.
+  """
+
+  pass
+
+
+class DecryptionError(Exception):
+  """
+  Ошибка расшифрования данных.
+  """
+
+  pass

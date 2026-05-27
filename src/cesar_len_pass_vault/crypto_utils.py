@@ -11,14 +11,6 @@ from cesar_len_pass_vault.config import config
 HEADER_FORMAT = f">16s{config.SALT_SIZE}s".encode()
 
 
-class DecryptionError(Exception):
-  """
-  Ошибка расшифрования: неверный пароль или повреждённые данные.
-  """
-
-  pass
-
-
 def _derive_key(master_password: str, salt: bytes) -> bytes:
   """
   Растяжение ключа: SHA-256(password + salt) × ITERATIONS итераций.

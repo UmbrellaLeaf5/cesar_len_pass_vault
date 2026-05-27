@@ -10,14 +10,7 @@ import yadisk
 from yadisk.exceptions import PathNotFoundError, YaDiskError
 
 from cesar_len_pass_vault.config import config
-
-
-class ConnectionError(Exception):
-  """
-  Ошибка подключения к Яндекс.Диску.
-  """
-
-  pass
+from cesar_len_pass_vault.exceptions import YaConnectionError
 
 
 def get_client() -> yadisk.YaDisk:
@@ -29,7 +22,7 @@ def get_client() -> yadisk.YaDisk:
   y = yadisk.YaDisk(token=config.YA_TOKEN)
 
   if not y.check_token():
-    raise ConnectionError("Invalid Yandex Disk token. Check YA_TOKEN in .env")
+    raise YaConnectionError("Invalid Yandex Disk token. Check YA_TOKEN in .env")
 
   return y
 
@@ -47,11 +40,11 @@ def upload(encrypted_blob: bytes, path: str | None = None) -> None:
     file_stream = io.BytesIO(encrypted_blob)
     y.upload(file_stream, target, overwrite=True)
 
-  except ConnectionError:
+  except YaConnectionError:
     raise
 
   except YaDiskError as e:
-    raise ConnectionError(f"Upload error: {e}") from e
+    raise YaConnectionError(f"Upload error: {e}") from e
 
 
 def download(path: str | None = None) -> bytes:
@@ -68,7 +61,7 @@ def download(path: str | None = None) -> bytes:
     y.download(target, file_stream)
     return file_stream.getvalue()
 
-  except ConnectionError:
+  except YaConnectionError:
     raise
 
   except PathNotFoundError:
@@ -77,7 +70,7 @@ def download(path: str | None = None) -> bytes:
     ) from None
 
   except YaDiskError as e:
-    raise ConnectionError(f"Download error: {e}") from e
+    raise YaConnectionError(f"Download error: {e}") from e
 
 
 def check_connection() -> bool:
@@ -91,7 +84,7 @@ def check_connection() -> bool:
 
     return True
 
-  except ConnectionError:
+  except YaConnectionError:
     return False
 
 
@@ -113,4 +106,4 @@ def delete_remote(path: str | None = None) -> None:
     pass
 
   except YaDiskError as e:
-    raise ConnectionError(f"Delete error: {e}") from e
+    raise YaConnectionError(f"Delete error: {e}") from e
