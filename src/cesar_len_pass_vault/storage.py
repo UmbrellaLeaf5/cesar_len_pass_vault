@@ -10,26 +10,13 @@ from cesar_len_pass_vault.cipher_primary import (
   decrypt_vault_primary,
   encrypt_vault_primary,
 )
-from cesar_len_pass_vault.cipher_wrapper import decrypt_vault, encrypt_vault
+from cesar_len_pass_vault.cipher_wrapper import decrypt_vault_backup, encrypt_vault_backup
 from cesar_len_pass_vault.models import PasswordEntry, Vault
 
 
 def vault_to_json(vault: Vault) -> str:
   """
   Сериализует Vault в JSON-строку.
-
-  Формат JSON:
-  {
-    "entries": [
-      {
-        "service": "gmail",
-        "login": "user@gmail.com",
-        "password": "abc123",
-        "notes": "2FA enabled"
-      },
-      ...
-    ]
-  }
   """
 
   data = {
@@ -73,49 +60,49 @@ def json_to_vault(json_str: str) -> Vault:
   return Vault(entries=entries)
 
 
-def pack_vault(vault: Vault, master_password: str) -> bytes:
+def pack_vault(vault: Vault, master_password: str, primary: bool = True) -> bytes:
   """
-  Упаковывает Vault в зашифрованный блоб (резервное шифрование, cipher_wrapper).
+  Упаковывает Vault в зашифрованный блоб.
 
-  vault → vault_to_json → encrypt_vault → bytes
-  """
+  Args:
+    vault: хранилище для упаковки
+    master_password: мастер-пароль для шифрования
+    primary: если True - основное шифрование (cesar_len_key),
+             если False - резервное (cipher_wrapper)
 
-  json_str = vault_to_json(vault)
-
-  return encrypt_vault(json_str, master_password)
-
-
-def unpack_vault(encrypted_blob: bytes, master_password: str) -> Vault:
-  """
-  Распаковывает зашифрованный блоб (резервное шифрование, cipher_wrapper).
-
-  bytes → decrypt_vault → json_to_vault → Vault
-  """
-
-  json_str = decrypt_vault(encrypted_blob, master_password)
-
-  return json_to_vault(json_str)
-
-
-def pack_vault_primary(vault: Vault, master_password: str) -> bytes:
-  """
-  Упаковывает Vault в зашифрованный блоб (основное шифрование, cesar_len_key).
-
-  vault → vault_to_json → encrypt_vault_primary → bytes
+  Returns:
+    Зашифрованный блоб (байты)
   """
 
   json_str = vault_to_json(vault)
 
-  return encrypt_vault_primary(json_str, master_password)
+  return (
+    encrypt_vault_primary(json_str, master_password)
+    if primary
+    else encrypt_vault_backup(json_str, master_password)
+  )
 
 
-def unpack_vault_primary(encrypted_blob: bytes, master_password: str) -> Vault:
+def unpack_vault(
+  encrypted_blob: bytes, master_password: str, primary: bool = True
+) -> Vault:
   """
-  Распаковывает зашифрованный блоб (основное шифрование, cesar_len_key).
+  Распаковывает зашифрованный блоб в Vault.
 
-  bytes → decrypt_vault_primary → json_to_vault → Vault
+  Args:
+    encrypted_blob: зашифрованный блоб
+    master_password: мастер-пароль для расшифрования
+    primary: если True - основное шифрование (cesar_len_key),
+             если False - резервное (cipher_wrapper)
+
+  Returns:
+    Расшифрованное хранилище Vault
   """
 
-  json_str = decrypt_vault_primary(encrypted_blob, master_password)
+  json_str = (
+    decrypt_vault_primary(encrypted_blob, master_password)
+    if primary
+    else decrypt_vault_backup(encrypted_blob, master_password)
+  )
 
   return json_to_vault(json_str)

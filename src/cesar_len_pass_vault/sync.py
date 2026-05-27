@@ -90,6 +90,7 @@ def check_connection() -> bool:
     get_client()
 
     return True
+
   except ConnectionError:
     return False
 
@@ -107,7 +108,9 @@ def delete_remote(path: str | None = None) -> None:
   try:
     y = get_client()
     y.remove(target, permanently=True)
+
   except PathNotFoundError:
     pass
+
   except YaDiskError as e:
     raise ConnectionError(f"Delete error: {e}") from e

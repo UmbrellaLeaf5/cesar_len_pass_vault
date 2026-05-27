@@ -75,12 +75,12 @@ def decrypt_vault_primary(encrypted_blob: bytes, master_password: str) -> str:
 
   try:
     cipher_text = body.decode("utf-8")
+
   except UnicodeDecodeError:
     raise DecryptionError("Invalid master password or corrupted file") from None
 
   decrypted_lines = CryptedLines(
     [cipher_text], key_hex, alphabet=DEFAULT_ALPHABET, crypt_type=CryptType.decr
   )
-  plaintext = decrypted_lines[0]
 
-  return plaintext
+  return decrypted_lines[0]

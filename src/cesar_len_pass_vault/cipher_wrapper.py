@@ -66,10 +66,7 @@ def _compute_shift(subkey: str, position: int, alph_len: int) -> int:
   raw_shift = int.from_bytes(hash_bytes[:4], "big")
   shift = raw_shift % alph_len
 
-  if shift == 0:
-    shift = 1
-
-  return shift
+  return shift if shift != 0 else 1
 
 
 def _caesar_shift(char: str, shift: int, alph: str, decrypt: bool = False) -> str:
@@ -160,7 +157,7 @@ def _decrypt_text(cipher_text: str, key: bytes, rounds: int = config.ROUNDS) -> 
   return result
 
 
-def encrypt_vault(vault_json: str, master_password: str) -> bytes:
+def encrypt_vault_backup(vault_json: str, master_password: str) -> bytes:
   """
   Шифрует JSON-строку хранилища.
 
@@ -181,7 +178,7 @@ def encrypt_vault(vault_json: str, master_password: str) -> bytes:
   return header + body
 
 
-def decrypt_vault(encrypted_blob: bytes, master_password: str) -> str:
+def decrypt_vault_backup(encrypted_blob: bytes, master_password: str) -> str:
   """
   Расшифровывает блоб, полученный с Яндекс.Диска.
 
@@ -207,6 +204,4 @@ def decrypt_vault(encrypted_blob: bytes, master_password: str) -> str:
   except UnicodeDecodeError:
     raise DecryptionError("Invalid master password or corrupted file") from None
 
-  plaintext = _decrypt_text(cipher_text, stretched_key)
-
-  return plaintext
+  return _decrypt_text(cipher_text, stretched_key)

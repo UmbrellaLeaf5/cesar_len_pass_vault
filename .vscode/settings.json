@@ -1,6 +1,7 @@
 {
   "python-envs.defaultEnvManager": "ms-python.python:venv",
   "cSpell.words": [
+    "boxlayout",
     "calcsize",
     "cryptor",
     "halign",
@@ -8,9 +9,11 @@
     "screenmanager",
     "subkey",
     "urandom",
+    "yadisk",
     "блоб",
     "блоба",
     "Валидирует",
+    "Десериализует",
     "Многораундовое",
     "многострочность",
     "недетерминизм",

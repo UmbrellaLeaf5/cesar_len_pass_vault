@@ -13,8 +13,8 @@ from cesar_len_pass_vault.cipher_wrapper import (
   _derive_key,
   _encrypt_text,
   _subkey,
-  decrypt_vault,
-  encrypt_vault,
+  decrypt_vault_backup,
+  encrypt_vault_backup,
 )
 from cesar_len_pass_vault.config import config
 from cesar_len_pass_vault.models import PasswordEntry, Vault
@@ -26,8 +26,8 @@ def test_encrypt_decrypt_roundtrip() -> None:
 
   original = '{"version": 1, "entries": []}'
 
-  blob = encrypt_vault(original, "master123")
-  result = decrypt_vault(blob, "master123")
+  blob = encrypt_vault_backup(original, "master123")
+  result = decrypt_vault_backup(blob, "master123")
 
   assert result == original
 
@@ -37,8 +37,8 @@ def test_different_passwords_different_cipher_text() -> None:
 
   json_str = '{"test": 1}'
 
-  b1 = encrypt_vault(json_str, "password1")
-  b2 = encrypt_vault(json_str, "password2")
+  b1 = encrypt_vault_backup(json_str, "password1")
+  b2 = encrypt_vault_backup(json_str, "password2")
 
   assert b1 != b2
 
@@ -48,8 +48,8 @@ def test_same_password_different_salt() -> None:
 
   json_str = '{"test": 1}'
 
-  b1 = encrypt_vault(json_str, "password")
-  b2 = encrypt_vault(json_str, "password")
+  b1 = encrypt_vault_backup(json_str, "password")
+  b2 = encrypt_vault_backup(json_str, "password")
 
   assert b1 != b2
 
@@ -57,8 +57,8 @@ def test_same_password_different_salt() -> None:
 def test_empty_vault_json() -> None:
   """encrypt_vault('{}', pw) → decrypt_vault → '{}'."""
 
-  blob = encrypt_vault("{}", "pw")
-  result = decrypt_vault(blob, "pw")
+  blob = encrypt_vault_backup("{}", "pw")
+  result = decrypt_vault_backup(blob, "pw")
 
   assert result == "{}"
 
@@ -79,8 +79,8 @@ def test_cyrillic_content() -> None:
 
   json_str = vault_to_json(vault)
 
-  blob = encrypt_vault(json_str, "мастер-пароль")
-  result = decrypt_vault(blob, "мастер-пароль")
+  blob = encrypt_vault_backup(json_str, "мастер-пароль")
+  result = decrypt_vault_backup(blob, "мастер-пароль")
 
   assert result == json_str
 
@@ -94,10 +94,10 @@ def test_cyrillic_content() -> None:
 def test_wrong_password_fails_json() -> None:
   """Неверный пароль → результат не является валидным JSON."""
 
-  blob = encrypt_vault('{"test": 1}', "correct_password")
+  blob = encrypt_vault_backup('{"test": 1}', "correct_password")
 
   try:
-    result = decrypt_vault(blob, "wrong_password")
+    result = decrypt_vault_backup(blob, "wrong_password")
     # Если не упало при декодировании UTF-8, пробуем парсить JSON
     json.loads(result)
     # Крайне маловероятно, но возможно: garbage = valid JSON
@@ -111,7 +111,7 @@ def test_corrupted_blob_raises() -> None:
   """Повреждённый блоб вызывает ValueError."""
 
   try:
-    decrypt_vault(b"garbage", "pw")
+    decrypt_vault_backup(b"garbage", "pw")
     raise AssertionError("Должно было вызвать исключение")
   except ValueError:
     pass
@@ -121,7 +121,7 @@ def test_truncated_blob_raises() -> None:
   """Слишком короткий блоб вызывает ValueError."""
 
   try:
-    decrypt_vault(b"short", "pw")
+    decrypt_vault_backup(b"short", "pw")
     raise AssertionError("Должно было вызвать исключение")
   except ValueError:
     pass
@@ -136,7 +136,7 @@ def test_wrong_magic_raises() -> None:
   body = b"some_cipher_text"
 
   try:
-    decrypt_vault(header + body, "pw")
+    decrypt_vault_backup(header + body, "pw")
     raise AssertionError("Должно было вызвать исключение")
   except ValueError:
     pass
@@ -280,8 +280,8 @@ def test_encrypt_vault_long_content() -> None:
 
   json_str = vault_to_json(vault)
 
-  blob = encrypt_vault(json_str, "long_test_password")
-  result = decrypt_vault(blob, "long_test_password")
+  blob = encrypt_vault_backup(json_str, "long_test_password")
+  result = decrypt_vault_backup(blob, "long_test_password")
 
   assert result == json_str
 
@@ -308,8 +308,8 @@ def test_vault_json_with_colon_and_special_chars() -> None:
 
   json_str = vault_to_json(vault)
 
-  blob = encrypt_vault(json_str, "master123")
-  result = decrypt_vault(blob, "master123")
+  blob = encrypt_vault_backup(json_str, "master123")
+  result = decrypt_vault_backup(blob, "master123")
 
   assert result == json_str, (
     f"Roundtrip failed!\n"
@@ -338,7 +338,7 @@ def test_vault_json_roundtrip_with_various_passwords() -> None:
   json_str = vault_to_json(vault)
 
   for pw in ["1", "abc", "пароль", "long-master-password!@#"]:
-    blob = encrypt_vault(json_str, pw)
-    result = decrypt_vault(blob, pw)
+    blob = encrypt_vault_backup(json_str, pw)
+    result = decrypt_vault_backup(blob, pw)
     assert result == json_str, f"Failed for password {pw!r}"
     json.loads(result)  # Должен парситься

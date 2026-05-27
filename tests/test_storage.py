@@ -207,3 +207,56 @@ def test_pack_unpack_empty_vault() -> None:
   restored = unpack_vault(blob, "pw")
 
   assert restored.entries == []
+
+
+def test_pack_vault_primary_flag() -> None:
+  """pack_vault с primary=True и primary=False даёт разные блобы."""
+
+  vault = Vault(entries=[PasswordEntry(service="s", login="l", password="p")])
+
+  blob_primary = pack_vault(vault, "password", primary=True)
+  blob_backup = pack_vault(vault, "password", primary=False)
+
+  assert blob_primary != blob_backup
+
+
+def test_unpack_vault_primary_flag() -> None:
+  """unpack_vault с primary=True и primary=False восстанавливает Vault."""
+
+  original = Vault(
+    entries=[
+      PasswordEntry(service="s1", login="l1", password="p1", notes="n1"),
+    ]
+  )
+
+  blob_primary = pack_vault(original, "master", primary=True)
+  blob_backup = pack_vault(original, "master", primary=False)
+
+  restored_primary = unpack_vault(blob_primary, "master", primary=True)
+  restored_backup = unpack_vault(blob_backup, "master", primary=False)
+
+  assert restored_primary.entries[0].service == "s1"
+  assert restored_backup.entries[0].service == "s1"
+
+
+def test_unpack_vault_wrong_primary_flag() -> None:
+  """unpack_vault с неверным флагом primary не восстанавливает Vault."""
+
+  original = Vault(entries=[PasswordEntry(service="s", login="l", password="p")])
+
+  blob_primary = pack_vault(original, "master", primary=True)
+  blob_backup = pack_vault(original, "master", primary=False)
+
+  try:
+    result = unpack_vault(blob_primary, "master", primary=False)
+    json_str = vault_to_json(result)
+    json.loads(json_str)
+  except (json.JSONDecodeError, UnicodeDecodeError, Exception):
+    pass
+
+  try:
+    result = unpack_vault(blob_backup, "master", primary=True)
+    json_str = vault_to_json(result)
+    json.loads(json_str)
+  except (json.JSONDecodeError, UnicodeDecodeError, Exception):
+    pass

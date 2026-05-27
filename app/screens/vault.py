@@ -20,14 +20,7 @@ if TYPE_CHECKING:
   from app.main import CesarVaultApp
 
 from app.screens.add_entry import AddEntryPopup
-from cesar_len_pass_vault import (
-  json_to_vault,
-  pack_vault,
-  pack_vault_primary,
-  unpack_vault,
-  unpack_vault_primary,
-  vault_to_json,
-)
+from cesar_len_pass_vault import json_to_vault, pack_vault, unpack_vault, vault_to_json
 from cesar_len_pass_vault.config import config
 from cesar_len_pass_vault.sync import ConnectionError, download, upload
 
@@ -54,10 +47,12 @@ class VaultScreen(Screen):
     try:
       blob = download()
       app = cast("CesarVaultApp", App.get_running_app())
-      vault = unpack_vault_primary(blob, app.master_password)
-      json_formatted = vault_to_json(vault)
-      self.editor.text = json_formatted
+
+      vault = unpack_vault(blob, app.master_password, primary=True)
+
+      self.editor.text = vault_to_json(vault)
       self._update_status_loaded(len(vault.entries))
+
       self._set_state("loaded")
 
     except FileNotFoundError:
@@ -87,7 +82,6 @@ class VaultScreen(Screen):
 
     if not json_str:
       self._update_status("Nothing to save: editor is empty")
-
       return
 
     try:
@@ -95,7 +89,6 @@ class VaultScreen(Screen):
 
     except json.JSONDecodeError as e:
       self._update_status(f"JSON error: line {e.lineno}, column {e.colno}")
-
       return
 
     self._set_state("loading")
@@ -105,18 +98,16 @@ class VaultScreen(Screen):
       pw = app.master_password
 
       # Основное хранилище - шифрование через cesar_len_key
-      primary_blob = pack_vault_primary(vault, pw)
+      primary_blob = pack_vault(vault, pw, primary=True)
       upload(primary_blob)
 
       # Резервная копия - шифрование через cipher_wrapper
-      try:
-        backup_blob = pack_vault(vault, pw)
-        upload(backup_blob, path=config.BACKUP_REMOTE_PATH)
-      except ConnectionError:
-        pass  # ошибка резервной копии некритична
+      backup_blob = pack_vault(vault, pw, primary=False)
+      upload(backup_blob, path=config.BACKUP_REMOTE_PATH)
 
       now = datetime.now().strftime("%H:%M")
       self._update_status(f"Saved {now} · {len(vault.entries)} entries")
+
       self._set_state("loaded")
 
     except ConnectionError as e:
@@ -176,10 +167,12 @@ class VaultScreen(Screen):
     try:
       blob = download(path=config.BACKUP_REMOTE_PATH)
       app = cast("CesarVaultApp", App.get_running_app())
-      vault = unpack_vault(blob, app.master_password)
-      json_formatted = vault_to_json(vault)
-      self.editor.text = json_formatted
+
+      vault = unpack_vault(blob, app.master_password, primary=False)
+
+      self.editor.text = vault_to_json(vault)
       self._update_status_loaded(len(vault.entries))
+
       self._set_state("loaded")
 
     except FileNotFoundError:
