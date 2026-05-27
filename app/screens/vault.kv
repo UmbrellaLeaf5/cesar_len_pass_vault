@@ -1,0 +1,72 @@
+#:kivy 2.3
+
+<VaultScreen>:
+  editor: editor
+  status_label: status_label
+  toolbar: toolbar
+
+  BoxLayout:
+    orientation: "vertical"
+    padding: 4
+    spacing: 4
+
+    Toolbar:
+      id: toolbar
+      size_hint_y: None
+      height: 48
+      download_enabled: root._state in ("empty", "loaded", "error")
+      upload_enabled: root._state == "loaded"
+      add_enabled: root._state == "loaded"
+      copy_enabled: root._state == "loaded"
+
+      BoxLayout:
+        spacing: 4
+        padding: 2
+
+        CustomButton:
+          text: "Скачать"
+          disabled: not toolbar.download_enabled
+          opacity: 1 if toolbar.download_enabled else 0.4
+          on_release: root.download()
+
+        CustomButton:
+          text: "Загрузить"
+          disabled: not toolbar.upload_enabled
+          opacity: 1 if toolbar.upload_enabled else 0.4
+          on_release: root.upload()
+
+        CustomButton:
+          text: "+ Запись"
+          disabled: not toolbar.add_enabled
+          opacity: 1 if toolbar.add_enabled else 0.4
+          on_release: root.add_entry()
+
+        CustomButton:
+          text: "Копировать"
+          disabled: not toolbar.copy_enabled
+          opacity: 1 if toolbar.copy_enabled else 0.4
+          on_release: root.copy_all()
+
+        CustomButton:
+          text: "⚙"
+          font_size: 20
+          width: 48
+          size_hint_x: None
+          on_release: root.open_settings()
+
+    CustomTextInput:
+      id: editor
+      text: ""
+      readonly: True
+      background_color: 0.1, 0.1, 0.1, 1
+      foreground_color: 0.9, 0.9, 0.9, 1
+
+    CustomLabel:
+      id: status_label
+      text: "Не загружено"
+      font_size: 13
+      color: 0.6, 0.6, 0.6, 1
+      size_hint_y: None
+      height: 28
+      halign: "left"
+      valign: "middle"

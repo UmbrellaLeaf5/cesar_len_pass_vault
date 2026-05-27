@@ -1,0 +1,32 @@
+[project]
+name = "cesar-len-pass-vault"
+version = "0.1.0"
+description = "Password vault with manual cloud sync. Uses cesar_len_key cipher."
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+  "cesar-len-key @ git+https://github.com/UmbrellaLeaf5/cesar_len_key",
+  "kivy>=2.3",
+  "yadisk>=3.4",
+  "python-dotenv>=1.2",
+]
+
+[dependency-groups]
+dev = [
+  "pytest>=9",
+  "ruff",
+  "pyright",
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.metadata]
+allow-direct-references = true
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/cesar_len_pass_vault", "app"]
+
+[project.scripts]
+cesar-vault = "app.main:main"

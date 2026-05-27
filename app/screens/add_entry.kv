@@ -1,0 +1,92 @@
+#:kivy 2.3
+
+<AddEntryPopup>:
+  service_input: service_input
+  login_input: login_input
+  password_input: password_input
+  notes_input: notes_input
+  error_label: error_label
+
+  title: "Добавить запись"
+  size_hint: 0.85, 0.65
+  auto_dismiss: False
+
+  BoxLayout:
+    orientation: "vertical"
+    padding: 16
+    spacing: 12
+
+    CustomLabel:
+      text: "Сервис"
+      halign: "left"
+      size_hint_y: None
+      height: 20
+
+    CustomTextInput:
+      id: service_input
+      multiline: False
+      size_hint_y: None
+      height: 40
+      write_tab: False
+
+    CustomLabel:
+      text: "Логин"
+      halign: "left"
+      size_hint_y: None
+      height: 20
+
+    CustomTextInput:
+      id: login_input
+      multiline: False
+      size_hint_y: None
+      height: 40
+      write_tab: False
+
+    CustomLabel:
+      text: "Пароль"
+      halign: "left"
+      size_hint_y: None
+      height: 20
+
+    CustomTextInput:
+      id: password_input
+      password: True
+      multiline: False
+      size_hint_y: None
+      height: 40
+      write_tab: False
+
+    CustomLabel:
+      text: "Заметки"
+      halign: "left"
+      size_hint_y: None
+      height: 20
+
+    CustomTextInput:
+      id: notes_input
+      multiline: False
+      size_hint_y: None
+      height: 40
+      write_tab: False
+
+    CustomLabel:
+      id: error_label
+      text: ""
+      color: 0.95, 0.3, 0.3, 1
+      opacity: 0
+      size_hint_y: None
+      height: 20
+
+    BoxLayout:
+      size_hint_y: None
+      height: 48
+      spacing: 12
+
+      CustomButton:
+        text: "Отмена"
+        background_color: 0.4, 0.4, 0.4, 1
+        on_release: root.dismiss()
+
+      CustomButton:
+        text: "Сохранить"
+        on_release: root.save()

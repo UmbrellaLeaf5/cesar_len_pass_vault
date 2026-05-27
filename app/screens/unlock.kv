@@ -1,0 +1,52 @@
+#:kivy 2.3
+
+<UnlockScreen>:
+  password_input: password_input
+  error_label: error_label
+
+  BoxLayout:
+    orientation: "vertical"
+    padding: 40
+    spacing: 20
+
+    Widget:
+      size_hint_y: 0.3
+
+    CustomLabel:
+      text: "CesarLen PassVault"
+      font_size: 28
+      halign: "center"
+      size_hint_y: None
+      height: 50
+
+    Widget:
+      size_hint_y: 0.1
+
+    CustomLabel:
+      text: "Мастер-пароль"
+      halign: "left"
+      size_hint_y: None
+      height: 24
+
+    CustomTextInput:
+      id: password_input
+      password: True
+      multiline: False
+      size_hint_y: None
+      height: 48
+      on_text_validate: root.unlock()
+
+    CustomLabel:
+      id: error_label
+      text: ""
+      color: 0.95, 0.3, 0.3, 1
+      opacity: 0
+      halign: "center"
+      size_hint_y: None
+      height: 24
+
+    CustomButton:
+      text: "Разблокировать"
+      on_release: root.unlock()
+
+    Widget:
