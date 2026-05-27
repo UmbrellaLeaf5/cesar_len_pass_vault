@@ -5,6 +5,9 @@
 from dataclasses import dataclass, field
 
 
+# --------------------------------------------------------------------------------------
+
+
 @dataclass
 class PasswordEntry:
   """
@@ -15,6 +18,9 @@ class PasswordEntry:
   login: str
   password: str
   notes: str = ""
+
+
+# --------------------------------------------------------------------------------------
 
 
 @dataclass

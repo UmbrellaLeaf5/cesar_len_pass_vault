@@ -19,12 +19,19 @@ from cesar_len_pass_vault.config import config
 from cesar_len_pass_vault.sync import check_connection, download, upload
 
 
+# --------------------------------------------------------------------------------------
+
 TEST_REMOTE_PATH = "/Приложения/cesar-len-key/vault_test.enc"
+
+# --------------------------------------------------------------------------------------
+
 
 pytestmark = pytest.mark.skipif(
   not config.YA_TOKEN,
   reason="YA_TOKEN не задан в .env",
 )
+
+# --------------------------------------------------------------------------------------
 
 
 def _cleanup_test_file() -> None:
@@ -35,10 +42,15 @@ def _cleanup_test_file() -> None:
 
     if y.check_token():
       y.remove(TEST_REMOTE_PATH, permanently=True)
+
   except yadisk.exceptions.PathNotFoundError:
     pass
+
   except Exception:
     pass
+
+
+# --------------------------------------------------------------------------------------
 
 
 @pytest.fixture(autouse=True)
@@ -57,6 +69,9 @@ def _manage_test_vault() -> Generator[None, None, None]:
   _cleanup_test_file()
 
 
+# --------------------------------------------------------------------------------------
+
+
 def _patch_remote_path(func):
   """Декоратор: подменяет REMOTE_PATH на тестовый."""
 
@@ -65,6 +80,9 @@ def _patch_remote_path(func):
     "REMOTE_PATH",
     TEST_REMOTE_PATH,
   )(func)
+
+
+# --------------------------------------------------------------------------------------
 
 
 @_patch_remote_path
@@ -77,6 +95,9 @@ def test_check_connection() -> None:
 
   if not result:
     pytest.skip("Нет соединения с Яндекс.Диском (невалидный токен)")
+
+
+# --------------------------------------------------------------------------------------
 
 
 @_patch_remote_path
@@ -92,6 +113,9 @@ def test_upload_download_roundtrip() -> None:
   downloaded = download()
 
   assert downloaded == test_data
+
+
+# --------------------------------------------------------------------------------------
 
 
 @_patch_remote_path

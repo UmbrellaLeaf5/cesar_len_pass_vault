@@ -21,6 +21,9 @@ from cesar_len_pass_vault.models import PasswordEntry, Vault
 from cesar_len_pass_vault.storage import vault_to_json
 
 
+# --------------------------------------------------------------------------------------
+
+
 def test_encrypt_decrypt_roundtrip() -> None:
   """decrypt_vault(encrypt_vault(json, pw), pw) == json."""
 
@@ -30,6 +33,9 @@ def test_encrypt_decrypt_roundtrip() -> None:
   result = decrypt_vault_backup(blob, "master123")
 
   assert result == original
+
+
+# --------------------------------------------------------------------------------------
 
 
 def test_different_passwords_different_cipher_text() -> None:
@@ -43,6 +49,9 @@ def test_different_passwords_different_cipher_text() -> None:
   assert b1 != b2
 
 
+# --------------------------------------------------------------------------------------
+
+
 def test_same_password_different_salt() -> None:
   """Одинаковый JSON и пароль - разные блобы из-за разной соли."""
 
@@ -54,6 +63,9 @@ def test_same_password_different_salt() -> None:
   assert b1 != b2
 
 
+# --------------------------------------------------------------------------------------
+
+
 def test_empty_vault_json() -> None:
   """encrypt_vault('{}', pw) → decrypt_vault → '{}'."""
 
@@ -61,6 +73,9 @@ def test_empty_vault_json() -> None:
   result = decrypt_vault_backup(blob, "pw")
 
   assert result == "{}"
+
+
+# --------------------------------------------------------------------------------------
 
 
 def test_cyrillic_content() -> None:
@@ -91,6 +106,9 @@ def test_cyrillic_content() -> None:
   assert data["entries"][0]["password"] == "пароль"
 
 
+# --------------------------------------------------------------------------------------
+
+
 def test_wrong_password_fails_json() -> None:
   """Неверный пароль → результат не является валидным JSON."""
 
@@ -107,6 +125,9 @@ def test_wrong_password_fails_json() -> None:
     pass
 
 
+# --------------------------------------------------------------------------------------
+
+
 def test_corrupted_blob_raises() -> None:
   """Повреждённый блоб вызывает ValueError."""
 
@@ -117,6 +138,9 @@ def test_corrupted_blob_raises() -> None:
     pass
 
 
+# --------------------------------------------------------------------------------------
+
+
 def test_truncated_blob_raises() -> None:
   """Слишком короткий блоб вызывает ValueError."""
 
@@ -125,6 +149,9 @@ def test_truncated_blob_raises() -> None:
     raise AssertionError("Должно было вызвать исключение")
   except ValueError:
     pass
+
+
+# --------------------------------------------------------------------------------------
 
 
 def test_wrong_magic_raises() -> None:
@@ -142,6 +169,9 @@ def test_wrong_magic_raises() -> None:
     pass
 
 
+# --------------------------------------------------------------------------------------
+
+
 def test_key_stretching_consistent() -> None:
   """_derive_key возвращает одинаковый результат для одинаковых входов."""
 
@@ -151,6 +181,9 @@ def test_key_stretching_consistent() -> None:
   assert k1 == k2
 
 
+# --------------------------------------------------------------------------------------
+
+
 def test_key_stretching_different_salt() -> None:
   """_derive_key с разной солью даёт разные ключи."""
 
@@ -158,6 +191,9 @@ def test_key_stretching_different_salt() -> None:
   k2 = _derive_key("password", b"b" * 32)
 
   assert k1 != k2
+
+
+# --------------------------------------------------------------------------------------
 
 
 def test_subkeys_different() -> None:
@@ -174,6 +210,9 @@ def test_subkeys_different() -> None:
   assert sk0 != sk2
 
 
+# --------------------------------------------------------------------------------------
+
+
 def test_shift_non_zero() -> None:
   """_compute_shift никогда не возвращает 0."""
 
@@ -184,6 +223,9 @@ def test_shift_non_zero() -> None:
     assert 1 <= shift < 150
 
 
+# --------------------------------------------------------------------------------------
+
+
 def test_shift_deterministic() -> None:
   """Одинаковые входы → одинаковый сдвиг."""
 
@@ -191,6 +233,9 @@ def test_shift_deterministic() -> None:
   s2 = _compute_shift("subkey", 42, 150)
 
   assert s1 == s2
+
+
+# --------------------------------------------------------------------------------------
 
 
 def test_caesar_shift_deterministic() -> None:
@@ -203,6 +248,9 @@ def test_caesar_shift_deterministic() -> None:
 
   assert r1 == r2
   assert r1 == "f"  # a + 5 = f
+
+
+# --------------------------------------------------------------------------------------
 
 
 def test_caesar_shift_roundtrip() -> None:
@@ -218,6 +266,9 @@ def test_caesar_shift_roundtrip() -> None:
       assert decrypted == char, f"Failed for char={char}, shift={shift_val}"
 
 
+# --------------------------------------------------------------------------------------
+
+
 def test_caesar_shift_unknown_char() -> None:
   """Символ не из алфавита возвращается без изменений."""
 
@@ -226,6 +277,9 @@ def test_caesar_shift_unknown_char() -> None:
   assert _caesar_shift("z", 3, alph) == "z"
   assert _caesar_shift(" ", 1, alph) == " "
   assert _caesar_shift("\n", 2, alph) == "\n"
+
+
+# --------------------------------------------------------------------------------------
 
 
 def test_encrypt_decrypt_text_roundtrip() -> None:
@@ -240,6 +294,9 @@ def test_encrypt_decrypt_text_roundtrip() -> None:
   assert decrypted == original
 
 
+# --------------------------------------------------------------------------------------
+
+
 def test_encrypt_decrypt_text_cyrillic() -> None:
   """_encrypt_text + _decrypt_text сохраняет кириллицу."""
 
@@ -252,6 +309,9 @@ def test_encrypt_decrypt_text_cyrillic() -> None:
   assert decrypted == original
 
 
+# --------------------------------------------------------------------------------------
+
+
 def test_encrypt_text_different_keys() -> None:
   """Разные ключи дают разный шифротекст для одного текста."""
 
@@ -261,6 +321,9 @@ def test_encrypt_text_different_keys() -> None:
   e2 = _encrypt_text(text, b"b" * 32)
 
   assert e1 != e2
+
+
+# --------------------------------------------------------------------------------------
 
 
 def test_encrypt_vault_long_content() -> None:
@@ -284,6 +347,9 @@ def test_encrypt_vault_long_content() -> None:
   result = decrypt_vault_backup(blob, "long_test_password")
 
   assert result == json_str
+
+
+# --------------------------------------------------------------------------------------
 
 
 def test_vault_json_with_colon_and_special_chars() -> None:
@@ -324,6 +390,9 @@ def test_vault_json_with_colon_and_special_chars() -> None:
   assert data["entries"][0]["service"] == "gmail"
   assert data["entries"][0]["password"] == "my-password:123"
   assert data["entries"][0]["notes"] == "2FA включена"
+
+
+# --------------------------------------------------------------------------------------
 
 
 def test_vault_json_roundtrip_with_various_passwords() -> None:

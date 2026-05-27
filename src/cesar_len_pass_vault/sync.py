@@ -13,6 +13,9 @@ from cesar_len_pass_vault.config import config
 from cesar_len_pass_vault.exceptions import YaConnectionError
 
 
+# --------------------------------------------------------------------------------------
+
+
 def get_client() -> yadisk.YaDisk:
   """
   Создаёт и проверяет клиент Яндекс.Диска.
@@ -25,6 +28,41 @@ def get_client() -> yadisk.YaDisk:
     raise YaConnectionError("Invalid Yandex Disk token. Check YA_TOKEN in .env")
 
   return y
+
+
+# MARK: download
+# --------------------------------------------------------------------------------------
+
+
+def download(path: str | None = None) -> bytes:
+  """
+  Скачивает зашифрованный блоб с Яндекс.Диска.
+  Возвращает сырые байты.
+  """
+
+  target = path if path is not None else config.REMOTE_PATH
+
+  try:
+    y = get_client()
+    file_stream = io.BytesIO()
+    y.download(target, file_stream)
+
+    return file_stream.getvalue()
+
+  except YaConnectionError:
+    raise
+
+  except PathNotFoundError:
+    raise FileNotFoundError(
+      "Vault not found on Disk. It may not be created yet."
+    ) from None
+
+  except YaDiskError as e:
+    raise YaConnectionError(f"Download error: {e}") from e
+
+
+# MARK: upload
+# --------------------------------------------------------------------------------------
 
 
 def upload(encrypted_blob: bytes, path: str | None = None) -> None:
@@ -47,30 +85,7 @@ def upload(encrypted_blob: bytes, path: str | None = None) -> None:
     raise YaConnectionError(f"Upload error: {e}") from e
 
 
-def download(path: str | None = None) -> bytes:
-  """
-  Скачивает зашифрованный блоб с Яндекс.Диска.
-  Возвращает сырые байты.
-  """
-
-  target = path if path is not None else config.REMOTE_PATH
-
-  try:
-    y = get_client()
-    file_stream = io.BytesIO()
-    y.download(target, file_stream)
-    return file_stream.getvalue()
-
-  except YaConnectionError:
-    raise
-
-  except PathNotFoundError:
-    raise FileNotFoundError(
-      "Vault not found on Disk. It may not be created yet."
-    ) from None
-
-  except YaDiskError as e:
-    raise YaConnectionError(f"Download error: {e}") from e
+# --------------------------------------------------------------------------------------
 
 
 def check_connection() -> bool:
@@ -81,11 +96,13 @@ def check_connection() -> bool:
 
   try:
     get_client()
-
     return True
 
   except YaConnectionError:
     return False
+
+
+# --------------------------------------------------------------------------------------
 
 
 def delete_remote(path: str | None = None) -> None:

@@ -11,8 +11,6 @@ from kivy.lang import Builder
 from kivy.properties import ObjectProperty
 from kivy.uix.screenmanager import Screen
 
-from cesar_len_pass_vault.models import Vault
-
 
 if TYPE_CHECKING:
   from app.main import CesarVaultApp
@@ -20,14 +18,19 @@ if TYPE_CHECKING:
 from app.popups.add_entry import AddEntryPopup
 from app.popups.settings import SettingsPopup
 from app.popups.sync import SyncPopup
-from cesar_len_pass_vault import json_to_vault, pack_vault, unpack_vault, vault_to_json
-from cesar_len_pass_vault.config import config
+from app.services.vault_ops import download_backup, download_primary, upload_vault
+from cesar_len_pass_vault import json_to_vault
 from cesar_len_pass_vault.enums import VaultState
 from cesar_len_pass_vault.exceptions import DecryptionError
-from cesar_len_pass_vault.sync import YaConnectionError, download, upload
+from cesar_len_pass_vault.models import Vault
+from cesar_len_pass_vault.sync import YaConnectionError
 
+
+# --------------------------------------------------------------------------------------
 
 Builder.load_file("app/screens/vault.kv")
+
+# --------------------------------------------------------------------------------------
 
 
 class VaultScreen(Screen):
@@ -43,6 +46,8 @@ class VaultScreen(Screen):
   preloaded_text: str = ""
 
   _state: VaultState = VaultState.EMPTY
+
+  # --------------------------------------------------------------------------------------
 
   def on_enter(self, *args: object) -> None:
     if self.preloaded_text:
@@ -66,6 +71,9 @@ class VaultScreen(Screen):
 
       self._hide_backup_editor()
 
+  # MARK: download
+  # --------------------------------------------------------------------------------------
+
   def download(self) -> None:
     """Скачать хранилище с Яндекс.Диска и показать в редакторе."""
 
@@ -73,17 +81,13 @@ class VaultScreen(Screen):
     self.editor.text = ""
 
     try:
-      blob = download()
-      app = cast("CesarVaultApp", App.get_running_app())
-
-      vault = unpack_vault(blob, app.master_password, primary=True)
-      self.editor.text = vault_to_json(vault)
+      primary_json_str, amount = download_primary(self._get_password())
+      self.editor.text = primary_json_str
 
       self._hide_backup_editor()
       self._update_ui_by_state(VaultState.LOADED)
-
       self.status_label.text = (
-        f"Loaded {datetime.now().strftime('%H:%M')} - {len(vault.entries)} entries"
+        f"Loaded {datetime.now().strftime('%H:%M')} - {amount} entries"
       )
 
     except FileNotFoundError:
@@ -103,117 +107,8 @@ class VaultScreen(Screen):
       self._update_ui_by_state(VaultState.EMPTY)
       self.status_label.text = f"Error: {e}"
 
-  def upload(self) -> None:
-    """Открыть попап, проверить рассинхрон и загрузить на Яндекс.Диск."""
-
-    if self._state == VaultState.SPLIT and self.editor.text != self.backup_editor.text:
-      popup = SyncPopup()
-      popup.on_choice = self._handle_sync_choice
-      popup.open()
-
-      return
-
-    self._do_upload()
-
-  def _handle_sync_choice(self, choice: str) -> None:
-    """Синхронизировать редакторы по выбору пользователя и загрузить."""
-
-    if choice == "primary":
-      self.backup_editor.text = self.editor.text
-
-    elif choice == "backup":
-      self.editor.text = self.backup_editor.text
-
-    self._do_upload()
-
-  def _do_upload(self) -> None:
-    """Зашифровать содержимое редактора и загрузить на Яндекс.Диск."""
-
-    json_str = self.editor.text.strip()
-
-    if not json_str:
-      self.status_label.text = "Nothing to upload: editor is empty"
-      return
-
-    try:
-      primary_vault = json_to_vault(json_str)
-
-    except json.JSONDecodeError as e:
-      self.status_label.text = f"JSON error: line {e.lineno}, column {e.colno}"
-      return
-
-    # В split режиме - валидируем и backup редактор
-    is_split = self._state == VaultState.SPLIT
-    backup_vault: Vault | None = None
-
-    if is_split:
-      backup_str = self.backup_editor.text.strip()
-
-      if not backup_str:
-        self.status_label.text = "Backup editor is empty"
-        return
-
-      try:
-        backup_vault = json_to_vault(backup_str)
-
-      except json.JSONDecodeError as e:
-        self.status_label.text = (
-          f"JSON error in backup: line {e.lineno}, column {e.colno}"
-        )
-
-        return
-
-    self._update_ui_by_state(VaultState.LOADING)
-
-    try:
-      app = cast("CesarVaultApp", App.get_running_app())
-      pw = app.master_password
-
-      # Основное хранилище
-      primary_blob = pack_vault(primary_vault, pw, primary=True)
-      upload(primary_blob)
-
-      # Резервная копия
-      if is_split:
-        assert backup_vault is not None
-        backup_blob = pack_vault(backup_vault, pw, primary=False)
-
-      else:
-        backup_blob = pack_vault(primary_vault, pw, primary=False)
-
-      upload(backup_blob, path=config.BACKUP_REMOTE_PATH)
-
-      self.status_label.text = (
-        f"Saved {datetime.now().strftime('%H:%M')} - {len(primary_vault.entries)} entries"
-      )
-
-      self._update_ui_by_state(VaultState.SPLIT if is_split else VaultState.LOADED)
-
-    except YaConnectionError as e:
-      self._update_ui_by_state(VaultState.EMPTY)
-      self.status_label.text = f"Connection error: {e}"
-
-    except Exception as e:
-      self._update_ui_by_state(VaultState.EMPTY)
-      self.status_label.text = f"Error: {e}"
-
-  def add_entry(self) -> None:
-    """Открыть попап добавления записи."""
-
-    popup = AddEntryPopup()
-
-    popup.target_editor = (
-      self.backup_editor if self._state == VaultState.SPLIT else self.editor
-    )
-
-    popup.open()
-
-  def open_settings(self) -> None:
-    """Открыть попап с настройками."""
-
-    popup = SettingsPopup()
-    popup.backup_callback = self._download_backup
-    popup.open()
+  # MARK: backup
+  # --------------------------------------------------------------------------------------
 
   def _download_backup(self) -> None:
     """Загрузить резервную копию хранилища (cipher_wrapper)."""
@@ -221,17 +116,13 @@ class VaultScreen(Screen):
     self._update_ui_by_state(VaultState.LOADING)
 
     try:
-      blob = download(path=config.BACKUP_REMOTE_PATH)
-
-      app = cast("CesarVaultApp", App.get_running_app())
-
-      vault = unpack_vault(blob, app.master_password, primary=False)
-      self.backup_editor.text = vault_to_json(vault)
+      backup_json_str, count = download_backup(self._get_password())
+      self.backup_editor.text = backup_json_str
 
       # Показываем split: основной редактор остаётся, backup справа
       self._update_ui_by_state(VaultState.SPLIT)
       self.status_label.text = (
-        f"Loaded backup {datetime.now().strftime('%H:%M')} - {len(vault.entries)} entries"
+        f"Loaded backup {datetime.now().strftime('%H:%M')} - {count} entries"
       )
 
     except FileNotFoundError:
@@ -250,6 +141,142 @@ class VaultScreen(Screen):
       self._update_ui_by_state(VaultState.EMPTY)
       self.status_label.text = f"Error: {e}"
 
+  # MARK: upload
+  # --------------------------------------------------------------------------------------
+
+  def upload(self) -> None:
+    """Открыть попап, проверить рассинхрон и загрузить на Яндекс.Диск."""
+
+    if self._state == VaultState.SPLIT and self.editor.text != self.backup_editor.text:
+      self.open_sync()
+      return
+
+    self._do_upload()
+
+  # --------------------------------------------------------------------------------------
+
+  def _do_upload(self) -> None:
+    """Зашифровать содержимое редактора и загрузить на Яндекс.Диск."""
+
+    primary_json = self.editor.text.strip()
+
+    if not primary_json:
+      self.status_label.text = "Nothing to upload: editor is empty"
+
+      return
+
+    try:
+      primary_vault = json_to_vault(primary_json)
+
+    except json.JSONDecodeError as e:
+      self.status_label.text = f"JSON error: line {e.lineno}, column {e.colno}"
+
+      return
+
+    # В split режиме - валидируем и backup редактор
+    is_split = self._state == VaultState.SPLIT
+    backup_vault: Vault | None = None
+
+    if is_split:
+      backup_json = self.backup_editor.text.strip()
+
+      if not backup_json:
+        self.status_label.text = "Backup editor is empty"
+        return
+
+      try:
+        backup_vault = json_to_vault(backup_json)
+
+      except json.JSONDecodeError as e:
+        self.status_label.text = (
+          f"JSON error in backup: line {e.lineno}, column {e.colno}"
+        )
+
+        return
+
+    self._update_ui_by_state(VaultState.LOADING)
+
+    try:
+      pw = self._get_password()
+
+      # Загружаем оба хранилища
+      upload_vault(
+        primary_vault,
+        backup_vault if (is_split and backup_vault is not None) else primary_vault,
+        pw,
+      )
+
+      self.status_label.text = (
+        f"Saved {datetime.now().strftime('%H:%M')} - {len(primary_vault.entries)} entries"
+      )
+
+      self._update_ui_by_state(VaultState.SPLIT if is_split else VaultState.LOADED)
+
+    except YaConnectionError as e:
+      self._update_ui_by_state(VaultState.EMPTY)
+      self.status_label.text = f"Connection error: {e}"
+
+    except Exception as e:
+      self._update_ui_by_state(VaultState.EMPTY)
+      self.status_label.text = f"Error: {e}"
+
+  # MARK: popup
+  # --------------------------------------------------------------------------------------
+
+  def open_add_entry(self) -> None:
+    """Открыть попап добавления записи."""
+
+    popup = AddEntryPopup()
+
+    popup.target_editor = (
+      self.backup_editor if self._state == VaultState.SPLIT else self.editor
+    )
+
+    popup.open()
+
+  # --------------------------------------------------------------------------------------
+
+  def open_settings(self) -> None:
+    """Открыть попап с настройками."""
+
+    popup = SettingsPopup()
+    popup.backup_callback = self._download_backup
+    popup.open()
+
+  # --------------------------------------------------------------------------------------
+
+  def open_sync(self) -> None:
+    """Открыть попап с синхронизацией."""
+
+    popup = SyncPopup()
+    popup.on_choice = self._handle_sync_choice
+    popup.open()
+
+  # MARK: private
+  # --------------------------------------------------------------------------------------
+
+  def _handle_sync_choice(self, choice: str) -> None:
+    """Синхронизировать редакторы по выбору пользователя и загрузить."""
+
+    if choice == "primary":
+      self.backup_editor.text = self.editor.text
+
+    elif choice == "backup":
+      self.editor.text = self.backup_editor.text
+
+    self._do_upload()
+
+  # --------------------------------------------------------------------------------------
+
+  def _get_password(self) -> str:
+    """Получить мастер-пароль из приложения."""
+
+    app = cast("CesarVaultApp", App.get_running_app())
+
+    return app.master_password
+
+  # --------------------------------------------------------------------------------------
+
   def _hide_backup_editor(self) -> None:
     """Скрыть backup редактор (возврат к одному редактору)."""
 
@@ -259,6 +286,9 @@ class VaultScreen(Screen):
     self.backup_editor.readonly = True
 
     self.editor.size_hint_x = 1
+
+  # MARK: state
+  # --------------------------------------------------------------------------------------
 
   def _update_ui_by_state(self, state: VaultState) -> None:
     """Переключить состояние экрана и обновить UI."""

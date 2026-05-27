@@ -10,9 +10,8 @@ from kivy.lang import Builder
 from kivy.properties import ListProperty, ObjectProperty
 from kivy.uix.screenmanager import Screen
 
-from cesar_len_pass_vault import unpack_vault, vault_to_json
-from cesar_len_pass_vault.exceptions import DecryptionError
-from cesar_len_pass_vault.sync import YaConnectionError, download
+from app.services.vault_ops import download_primary
+from cesar_len_pass_vault.sync import YaConnectionError
 
 
 if TYPE_CHECKING:
@@ -20,7 +19,11 @@ if TYPE_CHECKING:
   from app.screens.vault import VaultScreen
 
 
+# --------------------------------------------------------------------------------------
+
 Builder.load_file("app/screens/unlock.kv")
+
+# --------------------------------------------------------------------------------------
 
 
 class UnlockScreen(Screen):
@@ -30,8 +33,9 @@ class UnlockScreen(Screen):
 
   password_input = ObjectProperty(None)
   error_label = ObjectProperty(None)
-
   _bg_color = ListProperty([0, 0, 0, 1])  # Чёрный по умолчанию
+
+  # --------------------------------------------------------------------------------------
 
   def on_enter(self, *args: object) -> None:
     self.password_input.text = ""
@@ -41,6 +45,8 @@ class UnlockScreen(Screen):
     self.password_input.focus = True
 
     cast("CesarVaultApp", App.get_running_app()).master_password = ""
+
+  # --------------------------------------------------------------------------------------
 
   def unlock(self) -> None:
     """Обработчик нажатия кнопки Unlock."""
@@ -56,13 +62,11 @@ class UnlockScreen(Screen):
 
     # Пытаемся скачать и расшифровать хранилище
     try:
-      blob = download()
-      vault = unpack_vault(blob, password, primary=True)
-      json_str = vault_to_json(vault)
+      primary_json_str, _ = download_primary(password)
 
       # Успех - передаём данные на VaultScreen
       vault_screen = cast("VaultScreen", self.manager.get_screen("vault"))
-      vault_screen.preloaded_text = json_str
+      vault_screen.preloaded_text = primary_json_str
       self.manager.current = "vault"
 
     except FileNotFoundError:
@@ -71,7 +75,7 @@ class UnlockScreen(Screen):
       vault_screen.preloaded_text = ""
       self.manager.current = "vault"
 
-    except (json.JSONDecodeError, DecryptionError):
+    except json.JSONDecodeError:
       self._set_error("Invalid master password")
 
     except YaConnectionError as e:
@@ -79,6 +83,9 @@ class UnlockScreen(Screen):
 
     except Exception as e:
       self._set_error(f"Error: {e}")
+
+  # MARK: private
+  # --------------------------------------------------------------------------------------
 
   def _set_error(self, error_text: str) -> None:
     """Включить красный фон ошибки с текстом."""

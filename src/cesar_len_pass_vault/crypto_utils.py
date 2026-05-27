@@ -8,7 +8,11 @@ import struct
 from cesar_len_pass_vault.config import config
 
 
+# --------------------------------------------------------------------------------------
+
 HEADER_FORMAT = f">16s{config.SALT_SIZE}s".encode()
+
+# --------------------------------------------------------------------------------------
 
 
 def _derive_key(master_password: str, salt: bytes) -> bytes:
@@ -25,6 +29,9 @@ def _derive_key(master_password: str, salt: bytes) -> bytes:
     key = hashlib.sha256(key).digest()
 
   return key
+
+
+# --------------------------------------------------------------------------------------
 
 
 def validate_and_parse_header(encrypted_blob: bytes, expected_magic: bytes) -> bytes:
@@ -53,6 +60,9 @@ def validate_and_parse_header(encrypted_blob: bytes, expected_magic: bytes) -> b
     raise ValueError("Invalid file format")
 
   return salt
+
+
+# --------------------------------------------------------------------------------------
 
 
 def get_body(encrypted_blob: bytes) -> bytes:

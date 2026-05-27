@@ -5,6 +5,9 @@
 from cesar_len_pass_vault.models import PasswordEntry, Vault
 
 
+# --------------------------------------------------------------------------------------
+
+
 def test_password_entry_defaults() -> None:
   """PasswordEntry с тремя аргументами - notes пустая строка."""
 
@@ -14,6 +17,9 @@ def test_password_entry_defaults() -> None:
   assert entry.login == "user"
   assert entry.password == "abc"
   assert entry.notes == ""
+
+
+# --------------------------------------------------------------------------------------
 
 
 def test_password_entry_with_notes() -> None:
@@ -26,12 +32,18 @@ def test_password_entry_with_notes() -> None:
   assert entry.notes == "2FA включена"
 
 
+# --------------------------------------------------------------------------------------
+
+
 def test_create_empty_vault() -> None:
   """Vault() создаётся с пустым списком записей."""
 
   vault = Vault()
 
   assert vault.entries == []
+
+
+# --------------------------------------------------------------------------------------
 
 
 def test_vault_with_entries() -> None:

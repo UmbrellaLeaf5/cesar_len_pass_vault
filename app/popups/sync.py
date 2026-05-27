@@ -7,7 +7,11 @@ from kivy.properties import ObjectProperty
 from kivy.uix.popup import Popup
 
 
+# --------------------------------------------------------------------------------------
+
 Builder.load_file("app/popups/sync.kv")
+
+# --------------------------------------------------------------------------------------
 
 
 class SyncPopup(Popup):
@@ -17,6 +21,8 @@ class SyncPopup(Popup):
 
   on_choice = ObjectProperty(None)
 
+  # --------------------------------------------------------------------------------------
+
   def choose_primary(self) -> None:
     """Выбрать основной редактор."""
 
@@ -25,6 +31,8 @@ class SyncPopup(Popup):
 
     self.dismiss()
 
+  # --------------------------------------------------------------------------------------
+
   def choose_backup(self) -> None:
     """Выбрать backup редактор."""
 
@@ -32,6 +40,8 @@ class SyncPopup(Popup):
       self.on_choice("backup")
 
     self.dismiss()
+
+  # --------------------------------------------------------------------------------------
 
   def choose_cancel(self) -> None:
     """Отмена - ничего не делаем."""

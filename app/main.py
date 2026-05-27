@@ -13,7 +13,11 @@ from app.screens.vault import VaultScreen
 from app.widgets.toolbar import Toolbar  # noqa: F401 - registers class with Kivy Factory
 
 
+# --------------------------------------------------------------------------------------
+
 Builder.load_file("app/main.kv")
+
+# --------------------------------------------------------------------------------------
 
 
 class CesarVaultApp(App):
@@ -22,6 +26,8 @@ class CesarVaultApp(App):
   """
 
   master_password: str = ""
+
+  # --------------------------------------------------------------------------------------
 
   def build(self) -> ScreenManager:
     """Создаёт корневой виджет с ScreenManager."""
@@ -33,11 +39,16 @@ class CesarVaultApp(App):
     return sm
 
 
+# --------------------------------------------------------------------------------------
+
+
 def main() -> None:
   """Точка входа для CLI / pyproject.scripts."""
 
   CesarVaultApp().run()
 
+
+# --------------------------------------------------------------------------------------
 
 if __name__ == "__main__":
   main()

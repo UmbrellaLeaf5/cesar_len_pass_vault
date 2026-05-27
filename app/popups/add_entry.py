@@ -11,7 +11,11 @@ from kivy.uix.popup import Popup
 from cesar_len_pass_vault import PasswordEntry
 
 
+# --------------------------------------------------------------------------------------
+
 Builder.load_file("app/popups/add_entry.kv")
+
+# --------------------------------------------------------------------------------------
 
 
 class AddEntryPopup(Popup):
@@ -26,6 +30,8 @@ class AddEntryPopup(Popup):
   error_label = ObjectProperty(None)
   target_editor = ObjectProperty(None)
 
+  # --------------------------------------------------------------------------------------
+
   def on_open(self) -> None:
     """Сброс полей при открытии."""
 
@@ -36,6 +42,8 @@ class AddEntryPopup(Popup):
     self.error_label.text = ""
     self.error_label.opacity = 0
     self.service_input.focus = True
+
+  # --------------------------------------------------------------------------------------
 
   def save(self) -> None:
     """Валидирует поля и вставляет запись в JSON редактора."""

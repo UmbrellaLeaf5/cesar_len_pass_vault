@@ -15,6 +15,9 @@ from cesar_len_pass_vault.storage import (
 )
 
 
+# --------------------------------------------------------------------------------------
+
+
 def test_vault_to_json_empty() -> None:
   """Пустой Vault → корректный JSON."""
 
@@ -24,6 +27,9 @@ def test_vault_to_json_empty() -> None:
   data = json.loads(result)
 
   assert data["entries"] == []
+
+
+# --------------------------------------------------------------------------------------
 
 
 def test_vault_to_json_with_entries() -> None:
@@ -44,6 +50,9 @@ def test_vault_to_json_with_entries() -> None:
   assert data["entries"][1]["notes"] == "2FA"
 
 
+# --------------------------------------------------------------------------------------
+
+
 def test_json_to_vault_empty() -> None:
   """JSON без записей → Vault с пустым списком."""
 
@@ -51,6 +60,9 @@ def test_json_to_vault_empty() -> None:
   vault = json_to_vault(json_str)
 
   assert vault.entries == []
+
+
+# --------------------------------------------------------------------------------------
 
 
 def test_json_to_vault_with_entries() -> None:
@@ -70,6 +82,9 @@ def test_json_to_vault_with_entries() -> None:
   assert len(vault.entries) == 2
   assert vault.entries[0].service == "gmail"
   assert vault.entries[1].notes == "2FA"
+
+
+# --------------------------------------------------------------------------------------
 
 
 def test_vault_to_json_roundtrip() -> None:
@@ -94,6 +109,9 @@ def test_vault_to_json_roundtrip() -> None:
     assert orig.notes == rest.notes
 
 
+# --------------------------------------------------------------------------------------
+
+
 def test_json_missing_optional_fields() -> None:
   """JSON без поля notes → notes пустая строка."""
 
@@ -108,6 +126,9 @@ def test_json_missing_optional_fields() -> None:
   vault = json_to_vault(json_str)
 
   assert vault.entries[0].notes == ""
+
+
+# --------------------------------------------------------------------------------------
 
 
 def test_json_unknown_fields_ignored() -> None:
@@ -128,11 +149,17 @@ def test_json_unknown_fields_ignored() -> None:
   assert vault.entries[0].service == "gmail"
 
 
+# --------------------------------------------------------------------------------------
+
+
 def test_invalid_json_raises() -> None:
   """Невалидный JSON → json.JSONDecodeError."""
 
   with pytest.raises(json.JSONDecodeError):
     json_to_vault("{invalid json")
+
+
+# --------------------------------------------------------------------------------------
 
 
 def test_empty_entries_list() -> None:
@@ -141,6 +168,9 @@ def test_empty_entries_list() -> None:
   vault = json_to_vault('{"entries": []}')
 
   assert len(vault.entries) == 0
+
+
+# --------------------------------------------------------------------------------------
 
 
 def test_cyrillic_in_json() -> None:
@@ -166,6 +196,9 @@ def test_cyrillic_in_json() -> None:
   assert restored.entries[0].notes == "заметки"
 
 
+# --------------------------------------------------------------------------------------
+
+
 def test_pack_vault_returns_bytes() -> None:
   """pack_vault возвращает bytes."""
 
@@ -175,6 +208,9 @@ def test_pack_vault_returns_bytes() -> None:
 
   assert isinstance(blob, bytes)
   assert len(blob) > 0
+
+
+# --------------------------------------------------------------------------------------
 
 
 def test_pack_unpack_roundtrip() -> None:
@@ -199,6 +235,9 @@ def test_pack_unpack_roundtrip() -> None:
     assert orig.notes == rest.notes
 
 
+# --------------------------------------------------------------------------------------
+
+
 def test_pack_unpack_empty_vault() -> None:
   """pack/unpack пустого Vault."""
 
@@ -207,6 +246,9 @@ def test_pack_unpack_empty_vault() -> None:
   restored = unpack_vault(blob, "pw")
 
   assert restored.entries == []
+
+
+# --------------------------------------------------------------------------------------
 
 
 def test_pack_vault_primary_flag() -> None:
@@ -218,6 +260,9 @@ def test_pack_vault_primary_flag() -> None:
   blob_backup = pack_vault(vault, "password", primary=False)
 
   assert blob_primary != blob_backup
+
+
+# --------------------------------------------------------------------------------------
 
 
 def test_unpack_vault_primary_flag() -> None:
@@ -239,6 +284,9 @@ def test_unpack_vault_primary_flag() -> None:
   assert restored_backup.entries[0].service == "s1"
 
 
+# --------------------------------------------------------------------------------------
+
+
 def test_unpack_vault_wrong_primary_flag() -> None:
   """unpack_vault с неверным флагом primary не восстанавливает Vault."""
 
@@ -251,6 +299,7 @@ def test_unpack_vault_wrong_primary_flag() -> None:
     result = unpack_vault(blob_primary, "master", primary=False)
     json_str = vault_to_json(result)
     json.loads(json_str)
+
   except (json.JSONDecodeError, UnicodeDecodeError, Exception):
     pass
 
@@ -258,5 +307,6 @@ def test_unpack_vault_wrong_primary_flag() -> None:
     result = unpack_vault(blob_backup, "master", primary=True)
     json_str = vault_to_json(result)
     json.loads(json_str)
+
   except (json.JSONDecodeError, UnicodeDecodeError, Exception):
     pass

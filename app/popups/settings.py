@@ -7,7 +7,11 @@ from kivy.properties import ObjectProperty
 from kivy.uix.popup import Popup
 
 
+# --------------------------------------------------------------------------------------
+
 Builder.load_file("app/popups/settings.kv")
+
+# --------------------------------------------------------------------------------------
 
 
 class SettingsPopup(Popup):
@@ -16,6 +20,8 @@ class SettingsPopup(Popup):
   """
 
   backup_callback = ObjectProperty(None)
+
+  # --------------------------------------------------------------------------------------
 
   def trigger_backup(self) -> None:
     """Вызвать callback загрузки backup и закрыть попап."""

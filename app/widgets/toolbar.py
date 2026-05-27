@@ -9,6 +9,9 @@ from kivy.properties import BooleanProperty
 from kivy.uix.boxlayout import BoxLayout
 
 
+# --------------------------------------------------------------------------------------
+
+
 class Toolbar(BoxLayout):
   """
   Панель инструментов VaultScreen.

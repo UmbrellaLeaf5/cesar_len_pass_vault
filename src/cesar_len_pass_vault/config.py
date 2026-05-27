@@ -9,7 +9,11 @@ import os
 from dotenv import load_dotenv
 
 
+# --------------------------------------------------------------------------------------
+
 load_dotenv()
+
+# --------------------------------------------------------------------------------------
 
 
 class CesarVaultConfig:
@@ -36,6 +40,9 @@ class CesarVaultConfig:
   # Crypto MAGIC constants (не выносятся в .env - это формат файла)
   MAGIC_PRIMARY: bytes = b"CESAR_PRIMARY_V1"
   MAGIC_BACKUP: bytes = b"CESAR_VAULT_V001"
+
+
+# --------------------------------------------------------------------------------------
 
 
 # Экземпляр конфигурации для удобного импорта

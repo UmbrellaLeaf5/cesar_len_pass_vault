@@ -11,6 +11,9 @@ class YaConnectionError(Exception):
   pass
 
 
+# --------------------------------------------------------------------------------------
+
+
 class DecryptionError(Exception):
   """
   Ошибка расшифрования данных.

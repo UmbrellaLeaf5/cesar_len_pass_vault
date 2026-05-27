@@ -21,6 +21,10 @@ from cesar_len_pass_vault.crypto_utils import (
 from cesar_len_pass_vault.exceptions import DecryptionError
 
 
+# MARK: encrypt
+# --------------------------------------------------------------------------------------
+
+
 def encrypt_vault_primary(vault_json: str, master_password: str) -> bytes:
   """
   Шифрует JSON-строку хранилища через CryptedLines.
@@ -50,6 +54,10 @@ def encrypt_vault_primary(vault_json: str, master_password: str) -> bytes:
   header = struct.pack(HEADER_FORMAT, config.MAGIC_PRIMARY, salt)
 
   return header + body
+
+
+# MARK: decrypt
+# --------------------------------------------------------------------------------------
 
 
 def decrypt_vault_primary(encrypted_blob: bytes, master_password: str) -> str:

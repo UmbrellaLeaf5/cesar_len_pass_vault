@@ -13,6 +13,8 @@ from cesar_len_pass_vault.storage import (
 )
 
 
+# --------------------------------------------------------------------------------------
+
 __all__ = [
   "DecryptionError",
   "PasswordEntry",

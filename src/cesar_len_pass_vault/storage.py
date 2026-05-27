@@ -14,6 +14,10 @@ from cesar_len_pass_vault.cipher_wrapper import decrypt_vault_backup, encrypt_va
 from cesar_len_pass_vault.models import PasswordEntry, Vault
 
 
+# MARK: converting
+# --------------------------------------------------------------------------------------
+
+
 def vault_to_json(vault: Vault) -> str:
   """
   Сериализует Vault в JSON-строку.
@@ -32,6 +36,9 @@ def vault_to_json(vault: Vault) -> str:
   }
 
   return json.dumps(data, ensure_ascii=False, indent=2)
+
+
+# --------------------------------------------------------------------------------------
 
 
 def json_to_vault(json_str: str) -> Vault:
@@ -60,6 +67,10 @@ def json_to_vault(json_str: str) -> Vault:
   return Vault(entries=entries)
 
 
+# MARK: packing
+# --------------------------------------------------------------------------------------
+
+
 def pack_vault(vault: Vault, master_password: str, primary: bool = True) -> bytes:
   """
   Упаковывает Vault в зашифрованный блоб.
@@ -81,6 +92,9 @@ def pack_vault(vault: Vault, master_password: str, primary: bool = True) -> byte
     if primary
     else encrypt_vault_backup(json_str, master_password)
   )
+
+
+# --------------------------------------------------------------------------------------
 
 
 def unpack_vault(
