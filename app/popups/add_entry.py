@@ -14,7 +14,7 @@ from kivy.uix.screenmanager import ScreenManager
 from cesar_len_pass_vault import PasswordEntry
 
 
-Builder.load_file("app/screens/add_entry.kv")
+Builder.load_file("app/popups/add_entry.kv")
 
 
 class AddEntryPopup(Popup):

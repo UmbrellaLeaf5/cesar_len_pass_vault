@@ -7,7 +7,7 @@ from kivy.properties import ObjectProperty
 from kivy.uix.popup import Popup
 
 
-Builder.load_file("app/screens/settings_popup.kv")
+Builder.load_file("app/popups/settings.kv")
 
 
 class SettingsPopup(Popup):

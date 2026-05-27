@@ -39,10 +39,7 @@ class UnlockScreen(Screen):
     password = self.password_input.text.strip()
 
     if not password:
-      self.error_label.text = "Enter password"
-      self.error_label.opacity = 1
-      self._set_error_background()
-
+      self._set_error("Enter password")
       return
 
     app = cast("CesarVaultApp", App.get_running_app())
@@ -66,24 +63,20 @@ class UnlockScreen(Screen):
       self.manager.current = "vault"
 
     except (json.JSONDecodeError, DecryptionError):
-      self.error_label.text = "Invalid master password"
-      self.error_label.opacity = 1
-      self._set_error_background()
+      self._set_error("Invalid master password")
 
     except YaConnectionError as e:
-      self.error_label.text = f"Connection error: {e}"
-      self.error_label.opacity = 1
-      self._set_error_background()
+      self._set_error(f"Connection error: {e}")
 
     except Exception as e:
-      self.error_label.text = f"Error: {e}"
-      self.error_label.opacity = 1
-      self._set_error_background()
+      self._set_error(f"Error: {e}")
 
-  def _set_error_background(self) -> None:
-    """Включить/выключить красный фон ошибки."""
+  def _set_error(self, error_text: str) -> None:
+    """Включить красный фон ошибки с текстом."""
 
     self._bg_color = [0.4, 0.05, 0.05, 1]  # Бледно-красный
+    self.error_label.opacity = 1
+    self.error_label.text = error_text
 
   def on_enter(self, *args: object) -> None:
     """Сброс состояния при входе на экран."""
@@ -91,6 +84,7 @@ class UnlockScreen(Screen):
     self.password_input.text = ""
     self.error_label.text = ""
     self.error_label.opacity = 0
+    self._bg_color = [0, 0, 0, 1]  # Сброс фона к чёрному
     self.password_input.focus = True
 
     cast("CesarVaultApp", App.get_running_app()).master_password = ""

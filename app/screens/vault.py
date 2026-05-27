@@ -15,8 +15,8 @@ from kivy.uix.screenmanager import Screen
 if TYPE_CHECKING:
   from app.main import CesarVaultApp
 
-from app.screens.add_entry import AddEntryPopup
-from app.screens.settings_popup import SettingsPopup
+from app.popups.add_entry import AddEntryPopup
+from app.popups.settings import SettingsPopup
 from cesar_len_pass_vault import json_to_vault, pack_vault, unpack_vault, vault_to_json
 from cesar_len_pass_vault.config import config
 from cesar_len_pass_vault.enums import VaultState
@@ -40,29 +40,27 @@ class VaultScreen(Screen):
 
   _state: VaultState = VaultState.LOADED
 
-  def __init__(self, **kwargs) -> None:
-    super().__init__(**kwargs)
-
-    # Начальное состояние UI (до загрузки хранилища)
-    self.toolbar.download_enabled = True
-    self.toolbar.upload_enabled = False
-    self.toolbar.add_enabled = False
-    self.editor.readonly = True
-
-    self.editor.text = ""
-    self.status_label.text = ""
-
-  def on_pre_enter(self, *args: object) -> None:
-    """Вызывается перед переходом на экран."""
+  def on_enter(self, *args: object) -> None:
+    """Вызывается при переходе на экран."""
 
     if self.preloaded_text:
       self.editor.text = self.preloaded_text
       vault = json_to_vault(self.preloaded_text)
+
       self.status_label.text = (
         f"Loaded {datetime.now().strftime('%H:%M')} - {len(vault.entries)} entries"
       )
+
       self._update_ui_by_state(VaultState.LOADED)
       self.preloaded_text = ""
+
+    else:
+      self.toolbar.download_enabled = True
+      self.toolbar.upload_enabled = False
+      self.toolbar.add_enabled = False
+      self.editor.readonly = True
+      self.editor.text = ""
+      self.status_label.text = ""
 
   def download(self) -> None:
     """Скачать хранилище с Яндекс.Диска и показать в редакторе."""
