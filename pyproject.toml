@@ -16,6 +16,7 @@ dev = [
   "pytest>=9",
   "ruff",
   "pyright",
+  "pyinstaller>=6",
 ]
 
 [build-system]
