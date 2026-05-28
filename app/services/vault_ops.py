@@ -20,7 +20,7 @@ def download_primary(password: str) -> tuple[str, int]:
     password: мастер-пароль для расшифрования
 
   Returns:
-    Кортеж (json_str, entry_count) — JSON-строка и количество записей
+    Кортеж (json_str, entry_count) - JSON-строка и количество записей
 
   Raises:
     FileNotFoundError: хранилище ещё не создано
@@ -47,7 +47,7 @@ def download_backup(password: str) -> tuple[str, int]:
     password: мастер-пароль для расшифрования
 
   Returns:
-    Кортеж (json_str, entry_count) — JSON-строка и количество записей
+    Кортеж (json_str, entry_count) - JSON-строка и количество записей
 
   Raises:
     FileNotFoundError: backup ещё не создан
