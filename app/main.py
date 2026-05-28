@@ -32,6 +32,8 @@ class CesarVaultApp(App):
   def build(self) -> ScreenManager:
     """Создаёт корневой виджет с ScreenManager."""
 
+    self.icon = "images/leaves.png"
+
     sm = ScreenManager(transition=NoTransition())
     sm.add_widget(UnlockScreen(name="unlock"))
     sm.add_widget(VaultScreen(name="vault"))
