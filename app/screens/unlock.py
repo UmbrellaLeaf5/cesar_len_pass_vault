@@ -15,8 +15,8 @@ from cesar_len_pass_vault.sync import YaConnectionError
 
 
 if TYPE_CHECKING:
-  from app.main import CesarVaultApp
   from app.screens.vault import VaultScreen
+  from main import CesarVaultApp
 
 
 # --------------------------------------------------------------------------------------

@@ -1,4 +1,4 @@
-name: Build EXE
+name: Build and Release Windows EXE
 
 on:
   push:
@@ -8,22 +8,40 @@ jobs:
   build-exe:
     runs-on: windows-latest
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout code
+        uses: actions/checkout@v4
 
       - name: Install uv
         uses: astral-sh/setup-uv@v5
+        with:
+          enable-cache: true
 
-      - uses: actions/setup-python@v5
+      - name: Set up Python
+        uses: actions/setup-python@v5
         with:
           python-version: "3.12"
 
-      - name: Install dependencies
-        run: uv sync
+      - name: Install Dependencies
+        run: |
+          uv pip install --system pyinstaller kivy[base] kivy_deps.sdl2 kivy_deps.glew kivy_deps.angle
 
-      - name: Build .exe
-        run: uv run pyinstaller pyinstaller.spec
+      - name: Build EXE with PyInstaller
+        shell: bash
+        env:
+          KIVY_NO_CONSOLELOG: "1"
+          KIVY_NO_ARGS: "1"
+          KIVY_GL_BACKEND: "angle"
+          KIVY_BCK_WINDOW: "dummy"
+        run: |
+          python -m PyInstaller --noconfirm pyinstaller.spec
 
-      - name: Upload to Release
+      - name: Compress EXE Directory
+        run: |
+          Compress-Archive -Path dist/CesarVault -DestinationPath dist/CesarVault-Windows.zip
+
+      - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
-          files: dist/CesarVault.exe
+          files: dist/CesarVault-Windows.zip
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

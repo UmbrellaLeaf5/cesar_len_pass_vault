@@ -13,7 +13,7 @@ from kivy.uix.screenmanager import Screen
 
 
 if TYPE_CHECKING:
-  from app.main import CesarVaultApp
+  from main import CesarVaultApp
 
 from app.popups.add_entry import AddEntryPopup
 from app.popups.settings import SettingsPopup

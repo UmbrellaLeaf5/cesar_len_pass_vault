@@ -15,8 +15,12 @@ icon.filename = images/leaves.png
 android.permissions = INTERNET
 android.api = 34
 android.minapi = 26
-android.arch = arm64-v8a
+android.archs = arm64-v8a
 android.allow_backup = True
+
+android.ndk = 25c
+android.build_tools_version = 34.0.0
+android.accept_sdk_license = True
 
 # Build options
 p4a.branch = master

@@ -30,4 +30,4 @@ allow-direct-references = true
 packages = ["src/cesar_len_pass_vault", "app"]
 
 [project.scripts]
-cesar-vault = "app.main:main"
+cesar-vault = "main:main"

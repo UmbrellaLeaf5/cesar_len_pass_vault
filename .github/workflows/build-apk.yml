@@ -1,4 +1,4 @@
-name: Build APK
+name: Build and Release Android APK
 
 on:
   push:
@@ -6,35 +6,41 @@ on:
 
 jobs:
   build-apk:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     steps:
-      - uses: actions/checkout@v4
-
-      - name: Install system dependencies
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y \
-            autoconf \
-            automake \
-            libtool \
-            libltdl-dev \
-            libffi-dev \
-            openjdk-17-jdk
+      - name: Checkout code
+        uses: actions/checkout@v4
 
       - name: Install uv
         uses: astral-sh/setup-uv@v5
+        with:
+          enable-cache: true
 
-      - uses: actions/setup-python@v5
+      - name: Set up Python
+        uses: actions/setup-python@v5
         with:
           python-version: "3.12"
 
-      - name: Install build tools
-        run: uv pip install --system buildozer cython
+      - name: Install System Dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y build-essential libsqlite3-dev sqlite3 bzip2 libbz2-dev zlib1g-dev libssl-dev openssl libgdbm-dev libgdbm-compat-dev liblzma-dev libreadline-dev libncursesw5-dev libffi-dev uuid-dev libffi7
 
-      - name: Build .apk
-        run: buildozer android release
+      - name: Install Python Dependencies
+        run: |
+          uv pip install --system --upgrade pip
+          uv pip install --system buildozer cython git+https://github.com/UmbrellaLeaf5/cesar_len_pass_vault
 
-      - name: Upload to Release
+      - name: Build APK with Buildozer
+        run: |
+          export JAVA_HOME=/usr/lib/jvm/temurin-17-jdk-amd64
+          buildozer -v android release
+        env:
+          BUILDOZER_ALLOW_ORG_NAME_START_WITH_DIGIT: 1
+
+      - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
           files: bin/*.apk
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
