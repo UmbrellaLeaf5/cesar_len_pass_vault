@@ -3,7 +3,6 @@
 import os
 import sys
 
-from PyInstaller.building.datastruct import Tree
 from PyInstaller.utils.hooks import collect_all
 
 
@@ -11,7 +10,7 @@ python_prefix = sys.prefix
 
 datas = [
   ("images", "images/"),
-  *Tree("app", excludes=["*.py", "*.pyc", "**/__pycache__"]),
+  ("app", "app/"),
   (os.path.join(python_prefix, "share", "angle"), "share/angle/"),
   (os.path.join(python_prefix, "share", "glew"), "share/glew/"),
   (os.path.join(python_prefix, "share", "sdl2"), "share/sdl2/"),
