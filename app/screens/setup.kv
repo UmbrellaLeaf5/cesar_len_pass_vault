@@ -1,0 +1,71 @@
+#:kivy 2.3
+
+<SetupScreen>:
+  token_input: token_input
+  path_input: path_input
+  error_label: error_label
+
+  BoxLayout:
+    orientation: "vertical"
+    padding: 40
+    spacing: 20
+
+    canvas.before:
+      Color:
+        rgba: root._bg_color
+      Rectangle:
+        pos: self.pos
+        size: self.size
+
+    Widget:
+      size_hint_y: 1
+
+    CustomLabel:
+      text: "Setup"
+      font_size: 28
+      halign: "center"
+      size_hint_y: None
+      height: 50
+
+    CustomLabel:
+      text: "Yandex Disk OAuth Token"
+      halign: "left"
+      size_hint_y: None
+      height: 24
+
+    CustomTextInput:
+      id: token_input
+      multiline: False
+      size_hint_y: None
+      height: 48
+      on_text_validate: root.save_and_continue()
+
+    CustomLabel:
+      text: "Remote Path"
+      halign: "left"
+      size_hint_y: None
+      height: 24
+
+    CustomTextInput:
+      id: path_input
+      multiline: False
+      size_hint_y: None
+      height: 48
+      text: "/Приложения/cesar-len-key/vault.enc"
+      on_text_validate: root.save_and_continue()
+
+    CustomLabel:
+      id: error_label
+      text: ""
+      color: 1.0, 0.3, 0.3, 1
+      opacity: 0
+      halign: "center"
+      size_hint_y: None
+      height: 24
+
+    CustomButton:
+      text: "Save & Continue"
+      on_release: root.save_and_continue()
+
+    Widget:
+      size_hint_y: 1

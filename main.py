@@ -8,10 +8,12 @@ from kivy.app import App
 from kivy.lang import Builder
 from kivy.uix.screenmanager import NoTransition, ScreenManager
 
+from app.screens.setup import SetupScreen
 from app.screens.unlock import UnlockScreen
 from app.screens.vault import VaultScreen
 from app.utils import resource_path
 from app.widgets.toolbar import Toolbar  # noqa: F401 - registers class with Kivy Factory
+from cesar_len_pass_vault.config import is_configured
 
 
 # --------------------------------------------------------------------------------------
@@ -37,8 +39,12 @@ class CesarVaultApp(App):
     self.title = "CesarLen PassVault"
 
     sm = ScreenManager(transition=NoTransition())
+    sm.add_widget(SetupScreen(name="setup"))
     sm.add_widget(UnlockScreen(name="unlock"))
     sm.add_widget(VaultScreen(name="vault"))
+
+    # Роутинг: если не настроено → Setup, иначе → Unlock
+    sm.current = "setup" if not is_configured() else "unlock"
 
     return sm
 
