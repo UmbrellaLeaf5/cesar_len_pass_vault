@@ -35,6 +35,19 @@ cause the primary cipher to produce different output on different hardware.
 
 ## How it works - user experience
 
+### 0. First launch - setup
+
+On the very first launch (or when `.env` is missing) the app opens the
+**Setup** screen. Enter your **Yandex.Disk OAuth token** and the **remote
+path** where the vault should live, then press **Save & Continue**. The app
+writes the settings to `.env` and proceeds to the Unlock screen.
+
+On subsequent launches the Setup screen is skipped - your credentials are
+reused from `.env`.
+
+On Android, settings are stored in the app's private `user_data_dir` as
+`settings.json` (Android does not use `.env` files).
+
 ### 1. Unlock
 
 The app opens to a dark unlock screen with a single password field. Type your
@@ -140,9 +153,11 @@ visibility in one atomic step.
 git clone https://github.com/UmbrellaLeaf5/cesar_len_pass_vault
 cd cesar_len_pass_vault
 uv sync
-cp .env.example .env  # then edit .env - add your Yandex.Disk OAuth token
 uv run cesar-vault
 ```
+
+On first launch, the **Setup** screen will ask for your Yandex.Disk token
+and remote path. The settings are saved to `.env` and reused automatically.
 
 ### How to get a Yandex.Disk OAuth token
 
@@ -152,14 +167,50 @@ uv run cesar-vault
 
 ### `.env` reference
 
-| Variable             | Default                                      | Description                            |
-| -------------------- | -------------------------------------------- | -------------------------------------- |
-| `YA_TOKEN`           | -                                            | Yandex.Disk OAuth token (**required**) |
-| `REMOTE_PATH`        | `/Приложения/cesar-len-key/vault.enc`        | Primary vault path on Disk             |
-| `BACKUP_REMOTE_PATH` | `/Приложения/cesar-len-key/vault_backup.enc` | Backup vault path on Disk              |
-| `SALT_SIZE`          | `32`                                         | Salt length in bytes                   |
-| `ITERATIONS`         | `100000`                                     | SHA‑256 key stretching rounds          |
-| `ROUNDS`             | `3`                                          | Encryption rounds for backup cipher    |
+| Variable      | Default  | Description                               |
+| ------------- | -------- | ----------------------------------------- |
+| `YA_TOKEN`    | -        | Yandex.Disk OAuth token (**required**)    |
+| `REMOTE_PATH` | -        | Primary vault path on Disk (**required**) |
+| `SALT_SIZE`   | `32`     | Salt length in bytes                      |
+| `ITERATIONS`  | `100000` | SHA‑256 key stretching rounds             |
+| `ROUNDS`      | `3`      | Encryption rounds for backup cipher       |
+
+`BACKUP_REMOTE_PATH` is computed automatically as `REMOTE_PATH + ".backup"`.
+Specify it explicitly in `.env` only if you need a custom backup location
+(backward compatibility is preserved).
+
+> **Tip:** All values can be set through the **Setup** screen on first launch.
+> Manual `.env` editing is optional.
+
+## Building
+
+### Windows `.exe`
+
+```bash
+uv run pyinstaller pyinstaller.spec
+# Output: dist/CesarLen-PassVault/
+```
+
+The spec uses `--onedir` with the ANGLE backend. All `.kv` and image files
+are bundled automatically.
+
+### Android `.apk`
+
+```bash
+pip install buildozer cython
+buildozer android release
+# Output: bin/*.apk
+```
+
+Requires Linux. On Android the settings are saved as `settings.json` in the
+app's private directory (no `.env` files).
+
+### Automated releases
+
+CI workflows (`.github/workflows/`) trigger on any tag:
+
+- `build-exe.yml` - Windows `.exe` (zip archive)
+- `build-apk.yml` - Android `.apk`
 
 ## License
 
