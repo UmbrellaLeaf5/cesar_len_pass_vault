@@ -11,6 +11,8 @@ from kivy.lang import Builder
 from kivy.properties import ObjectProperty
 from kivy.uix.screenmanager import Screen
 
+from app.utils import resource_path
+
 
 if TYPE_CHECKING:
   from main import CesarVaultApp
@@ -28,7 +30,7 @@ from cesar_len_pass_vault.sync import YaConnectionError
 
 # --------------------------------------------------------------------------------------
 
-Builder.load_file("app/screens/vault.kv")
+Builder.load_file(resource_path("app/screens/vault.kv"))
 
 # --------------------------------------------------------------------------------------
 

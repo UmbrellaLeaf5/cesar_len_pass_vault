@@ -8,12 +8,13 @@ from kivy.lang import Builder
 from kivy.properties import ObjectProperty
 from kivy.uix.popup import Popup
 
+from app.utils import resource_path
 from cesar_len_pass_vault import PasswordEntry
 
 
 # --------------------------------------------------------------------------------------
 
-Builder.load_file("app/popups/add_entry.kv")
+Builder.load_file(resource_path("app/popups/add_entry.kv"))
 
 # --------------------------------------------------------------------------------------
 

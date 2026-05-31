@@ -6,10 +6,12 @@ from kivy.lang import Builder
 from kivy.properties import ObjectProperty
 from kivy.uix.popup import Popup
 
+from app.utils import resource_path
+
 
 # --------------------------------------------------------------------------------------
 
-Builder.load_file("app/popups/settings.kv")
+Builder.load_file(resource_path("app/popups/settings.kv"))
 
 # --------------------------------------------------------------------------------------
 

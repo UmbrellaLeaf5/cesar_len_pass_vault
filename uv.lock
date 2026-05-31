@@ -32,6 +32,10 @@ source = { editable = "." }
 dependencies = [
     { name = "cesar-len-key" },
     { name = "kivy" },
+    { name = "kivy-deps-angle" },
+    { name = "kivy-deps-glew" },
+    { name = "kivy-deps-sdl2" },
+    { name = "pyinstaller" },
     { name = "python-dotenv" },
     { name = "yadisk" },
 ]
@@ -48,6 +52,10 @@ dev = [
 requires-dist = [
     { name = "cesar-len-key", git = "https://github.com/UmbrellaLeaf5/cesar_len_key" },
     { name = "kivy", specifier = ">=2.3" },
+    { name = "kivy-deps-angle", specifier = ">=0.4.0" },
+    { name = "kivy-deps-glew", specifier = ">=0.3.1" },
+    { name = "kivy-deps-sdl2", specifier = ">=0.8.0" },
+    { name = "pyinstaller", specifier = ">=6.20.0" },
     { name = "python-dotenv", specifier = ">=1.2" },
     { name = "yadisk", specifier = ">=3.4" },
 ]

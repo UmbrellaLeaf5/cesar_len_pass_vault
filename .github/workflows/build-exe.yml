@@ -22,8 +22,7 @@ jobs:
           python-version: "3.12"
 
       - name: Install Dependencies
-        run: |
-          uv pip install --system pyinstaller kivy[base] kivy_deps.sdl2 kivy_deps.glew kivy_deps.angle
+        run: uv sync
 
       - name: Build EXE with PyInstaller
         shell: bash
@@ -33,15 +32,15 @@ jobs:
           KIVY_GL_BACKEND: "angle"
           KIVY_BCK_WINDOW: "dummy"
         run: |
-          python -m PyInstaller --noconfirm pyinstaller.spec
+          uv run pyinstaller --noconfirm pyinstaller.spec --log-level ERROR
 
       - name: Compress EXE Directory
         run: |
-          Compress-Archive -Path dist/CesarVault -DestinationPath dist/CesarVault-Windows.zip
+          Compress-Archive -Path dist/CesarLen-PassVault -DestinationPath dist/CesarLen-PassVault-Windows.zip
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
-          files: dist/CesarVault-Windows.zip
+          files: dist/CesarLen-PassVault-Windows.zip
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

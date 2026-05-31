@@ -11,6 +11,7 @@ from kivy.properties import ListProperty, ObjectProperty
 from kivy.uix.screenmanager import Screen
 
 from app.services.vault_ops import download_primary
+from app.utils import resource_path
 from cesar_len_pass_vault.sync import YaConnectionError
 
 
@@ -21,7 +22,7 @@ if TYPE_CHECKING:
 
 # --------------------------------------------------------------------------------------
 
-Builder.load_file("app/screens/unlock.kv")
+Builder.load_file(resource_path("app/screens/unlock.kv"))
 
 # --------------------------------------------------------------------------------------
 
