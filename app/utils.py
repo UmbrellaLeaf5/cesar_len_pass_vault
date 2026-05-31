@@ -11,6 +11,9 @@ def resource_path(relative_path):
   if getattr(sys, "frozen", False):
     # EXE: _MEIPASS - это _internal/
     base = sys._MEIPASS  # type: ignore
+  elif is_android_platform():
+    # Android: p4a устанавливает CWD в корень приложения
+    base = os.getcwd()
   else:
     current = os.path.dirname(os.path.abspath(__file__))
 
