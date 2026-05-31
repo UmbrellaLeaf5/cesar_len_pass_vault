@@ -4,6 +4,13 @@
 Использует ScreenManager для навигации между экранами.
 """
 
+import os
+import sys
+
+
+# Android (Buildozer/p4a): src/ лежит в app bundle, но не на sys.path
+sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), "src"))
+
 from kivy.app import App
 from kivy.lang import Builder
 from kivy.uix.screenmanager import NoTransition, ScreenManager
