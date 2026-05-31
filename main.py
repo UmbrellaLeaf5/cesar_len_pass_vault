@@ -7,9 +7,12 @@
 import os
 import sys
 
+from app.utils import is_android_platform, resource_path
+
 
 # Android (Buildozer/p4a): src/ лежит в app bundle, но не на sys.path
-sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), "src"))
+if is_android_platform():
+  sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), "src"))
 
 from kivy.app import App
 from kivy.lang import Builder
@@ -18,7 +21,6 @@ from kivy.uix.screenmanager import NoTransition, ScreenManager
 from app.screens.setup import SetupScreen
 from app.screens.unlock import UnlockScreen
 from app.screens.vault import VaultScreen
-from app.utils import resource_path
 from app.widgets.toolbar import Toolbar  # noqa: F401 - registers class with Kivy Factory
 from cesar_len_pass_vault.config import is_configured
 

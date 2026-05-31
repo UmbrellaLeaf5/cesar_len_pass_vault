@@ -25,3 +25,14 @@ def resource_path(relative_path):
     base = current
 
   return os.path.join(base, relative_path)
+
+
+def is_android_platform() -> bool:
+  """True на Android (Buildozer/p4a), False на desktop."""
+
+  try:
+    from android.storage import app_storage_path  # type: ignore  # noqa: F401, PLC0415
+
+    return True
+  except ImportError:
+    return False
