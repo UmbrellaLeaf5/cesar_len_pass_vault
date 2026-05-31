@@ -34,16 +34,24 @@ jobs:
       - name: Build APK with Buildozer
         run: |
           export JAVA_HOME=/usr/lib/jvm/temurin-17-jdk-amd64
-          buildozer -v android release
+          buildozer -v android debug
         env:
           BUILDOZER_ALLOW_ORG_NAME_START_WITH_DIGIT: 1
+
+      - name: Prepare APK for Release
+        run: |
+          APK=$(find bin/ -name "*.apk" -type f | head -n 1)
+          if [ -f "$APK" ]; then
+            cp "$APK" "CesarLen-PassVault-Android.apk"
+            echo "APK prepared: CesarLen-PassVault-Android.apk"
+          else
+            echo "No APK found!"
+            exit 1
+          fi
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
-          files: |
-            bin/*.apk
-            *.apk
-            **/*.apk
+          files: CesarLen-PassVault-Android.apk
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

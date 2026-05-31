@@ -34,7 +34,7 @@ jobs:
         run: |
           uv run pyinstaller --noconfirm pyinstaller.spec --log-level ERROR
 
-      - name: Compress EXE Directory
+      - name: Prepare ZIP for Release
         run: |
           Compress-Archive -Path dist/CesarLen-PassVault -DestinationPath dist/CesarLen-PassVault-Windows.zip
 
