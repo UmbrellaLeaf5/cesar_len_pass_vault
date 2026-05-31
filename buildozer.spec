@@ -1,5 +1,6 @@
 [app]
 title = CesarLen PassVault
+android.release_artifact = apk
 package.name = cesarlenpassvault
 package.domain = org.umbrellaleaf5
 source.dir = .
