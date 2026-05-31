@@ -9,10 +9,6 @@ dependencies = [
   "kivy>=2.3",
   "yadisk>=3.4",
   "python-dotenv>=1.2",
-  "kivy-deps-sdl2>=0.8.0",
-  "kivy-deps-glew>=0.3.1",
-  "kivy-deps-angle>=0.4.0",
-  "pyinstaller>=6.20.0",
 ]
 
 [dependency-groups]
@@ -21,6 +17,9 @@ dev = [
   "ruff",
   "pyright",
   "pyinstaller>=6",
+  "kivy-deps-sdl2>=0.8.0",
+  "kivy-deps-glew>=0.3.1",
+  "kivy-deps-angle>=0.4.0",
 ]
 
 [build-system]

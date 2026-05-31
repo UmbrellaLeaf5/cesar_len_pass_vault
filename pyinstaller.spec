@@ -3,6 +3,7 @@
 import os
 import sys
 
+from PyInstaller.building.datastruct import Tree
 from PyInstaller.utils.hooks import collect_all
 
 
@@ -10,8 +11,7 @@ python_prefix = sys.prefix
 
 datas = [
   ("images", "images/"),
-  ("src", "src/"),
-  ("app", "app/"),
+  *Tree("app", excludes=["*.py", "*.pyc", "**/__pycache__"]),
   (os.path.join(python_prefix, "share", "angle"), "share/angle/"),
   (os.path.join(python_prefix, "share", "glew"), "share/glew/"),
   (os.path.join(python_prefix, "share", "sdl2"), "share/sdl2/"),
@@ -20,9 +20,15 @@ datas = [
 binaries = []
 hiddenimports = [
   "cesar_len_pass_vault",
+  "cesar_len_pass_vault.config",
   "cesar_len_pass_vault.models",
   "cesar_len_pass_vault.storage",
   "cesar_len_pass_vault.sync",
+  "cesar_len_pass_vault.cipher_wrapper",
+  "cesar_len_pass_vault.cipher_primary",
+  "cesar_len_pass_vault.crypto_utils",
+  "cesar_len_pass_vault.enums",
+  "cesar_len_pass_vault.exceptions",
   "app.screens",
   "app.popups",
   "app.services",

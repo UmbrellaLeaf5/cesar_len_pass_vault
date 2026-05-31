@@ -181,5 +181,5 @@ cython_debug/
 *.exe
 *.rtf
 *.xlsx
-*.env
+*.env*
 temp.*

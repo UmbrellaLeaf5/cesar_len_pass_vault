@@ -5,10 +5,11 @@ import sys
 def resource_path(relative_path):
   """
   Возвращает абсолютный путь к ресурсу.
-  Автоматически определяет базу: откуда бы ни вызвали — из main.py или из app/screens/unlock.py
+  Автоматически определяет базу: откуда бы ни вызвали - из main.py или из
+  app/screens/unlock.py.
   """
   if getattr(sys, "frozen", False):
-    # EXE: _MEIPASS — это _internal/
+    # EXE: _MEIPASS - это _internal/
     base = sys._MEIPASS  # type: ignore
   else:
     current = os.path.dirname(os.path.abspath(__file__))
