@@ -1,9 +1,10 @@
 # CesarLen PassVault
 
 [![Python](https://img.shields.io/badge/Python-3.12+-blue?logo=python)](https://python.org)
-[![Kivy](https://img.shields.io/badge/Kivy-2.3+-black?logo=kivy)](https://kivy.org)
+[![Kivy](https://img.shields.io/badge/Kivy-2.3+-green?logo=kivy)](https://kivy.org)
 [![python-dotenv](https://img.shields.io/badge/dotenv-1.0+-yellow)](https://github.com/theskumar/python-dotenv)
 [![YandexDisk](https://img.shields.io/badge/Yandex.Disk-REST-red)](https://yandex.ru/dev/disk/)
+[![GitHub release](https://img.shields.io/github/v/release/UmbrellaLeaf5/cesar_len_pass_vault?label=latest%20release)](https://github.com/UmbrellaLeaf5/cesar_len_pass_vault/releases/latest)
 [![License](https://img.shields.io/badge/License-Unlicense-lightgrey)](https://unlicense.org)
 
 <!-- [![Tests](https://github.com/UmbrellaLeaf5/cesar_len_pass_vault/workflows/Tests/badge.svg)](https://github.com/UmbrellaLeaf5/cesar_len_pass_vault/actions/workflows/tests.yml)
