@@ -1,6 +1,6 @@
 [app]
 title = CesarLen PassVault
-android.release_artifact = apk
+# android.release_artifact = apk
 package.name = cesarlenpassvault
 package.domain = org.umbrellaleaf5
 source.dir = .
@@ -16,7 +16,7 @@ icon.filename = images/leaves.png
 android.permissions = INTERNET
 android.api = 34
 android.minapi = 26
-android.archs = arm64-v8a
+android.archs = arm64-v8a, armeabi-v7a
 android.allow_backup = True
 
 android.ndk = 25c
