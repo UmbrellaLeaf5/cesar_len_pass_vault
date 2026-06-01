@@ -4,6 +4,7 @@
 
 import json
 
+from kivy.core.window import Window
 from kivy.lang import Builder
 from kivy.properties import ObjectProperty
 from kivy.uix.popup import Popup
@@ -43,6 +44,28 @@ class AddEntryPopup(Popup):
     self.error_label.text = ""
     self.error_label.opacity = 0
     self.service_input.focus = True
+
+    Window.bind(on_key_down=self._on_key_down)
+
+  # --------------------------------------------------------------------------------------
+
+  def on_dismiss(self) -> None:
+    """Отвязать обработчик клавиш."""
+
+    Window.unbind(on_key_down=self._on_key_down)
+
+  # MARK: private
+  # --------------------------------------------------------------------------
+
+  def _on_key_down(self, window, key, scancode, codepoint, modifiers) -> bool:
+    """ESC = отмена."""
+
+    if key == 27:
+      self.dismiss()
+
+      return True
+
+    return False
 
   # --------------------------------------------------------------------------------------
 
