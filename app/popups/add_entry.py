@@ -4,7 +4,7 @@
 
 import json
 
-from kivy.core.window import Window
+from kivy.core.window import Keyboard, Window
 from kivy.lang import Builder
 from kivy.properties import ObjectProperty
 from kivy.uix.popup import Popup
@@ -53,19 +53,6 @@ class AddEntryPopup(Popup):
     """Отвязать обработчик клавиш."""
 
     Window.unbind(on_key_down=self._on_key_down)
-
-  # MARK: private
-  # --------------------------------------------------------------------------
-
-  def _on_key_down(self, window, key, scancode, codepoint, modifiers) -> bool:
-    """ESC = отмена."""
-
-    if key == 27:
-      self.dismiss()
-
-      return True
-
-    return False
 
   # --------------------------------------------------------------------------------------
 
@@ -117,3 +104,16 @@ class AddEntryPopup(Popup):
     self.target_editor.text = json.dumps(data, ensure_ascii=False, indent=2)
 
     self.dismiss()
+
+  # MARK: private
+  # --------------------------------------------------------------------------
+
+  def _on_key_down(self, window, key, scancode, codepoint, modifiers) -> bool:
+    """ESC = отмена."""
+
+    if key == Keyboard.keycodes["escape"]:
+      self.dismiss()
+
+      return True
+
+    return False
