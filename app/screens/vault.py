@@ -21,7 +21,7 @@ from app.popups.add_entry import AddEntryPopup
 from app.popups.settings import SettingsPopup
 from app.popups.sync import SyncPopup
 from app.services.vault_ops import download_backup, download_primary, upload_vault
-from cesar_len_pass_vault import json_to_vault
+from cesar_len_pass_vault import json_to_vault, vault_to_json
 from cesar_len_pass_vault.enums import VaultState
 from cesar_len_pass_vault.exceptions import DecryptionError
 from cesar_len_pass_vault.models import Vault
@@ -207,6 +207,12 @@ class VaultScreen(Screen):
         backup_vault if (is_split and backup_vault is not None) else primary_vault,
         pw,
       )
+
+      # Обновляем редакторы отсортированным JSON
+      self.editor.text = vault_to_json(primary_vault)
+
+      if is_split and backup_vault is not None:
+        self.backup_editor.text = vault_to_json(backup_vault)
 
       self.status_label.text = (
         f"Saved {datetime.now().strftime('%H:%M')} - {len(primary_vault.entries)} entries"

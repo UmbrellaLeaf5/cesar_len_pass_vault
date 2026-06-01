@@ -80,6 +80,10 @@ def upload_vault(primary_vault: Vault, backup_vault: Vault, password: str) -> No
     YaConnectionError: ошибка подключения к Яндекс.Диску
   """
 
+  # Сортировка по service (case-insensitive)
+  primary_vault.entries.sort(key=lambda e: e.service.casefold())
+  backup_vault.entries.sort(key=lambda e: e.service.casefold())
+
   # Основное хранилище
   primary_blob = pack_vault(primary_vault, password, primary=True)
   upload(primary_blob)
