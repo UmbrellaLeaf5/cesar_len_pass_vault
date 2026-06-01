@@ -13,104 +13,108 @@
   size_hint: 0.85, 0.65
   auto_dismiss: False
 
-  BoxLayout:
-    orientation: "vertical"
-    padding: '14dp'
-    spacing: '10dp'
-
-    Label:
-      text: "Add Entry"
-      font_size: '18sp'
-      bold: True
-      color: 1.0, 1.0, 1.0, 1
-      size_hint_y: None
-      height: '26dp'
-
-    Widget:
-      size_hint_y: None
-      height: '1dp'
-      canvas:
-        Color:
-          rgba: 0.2, 0.5, 0.8, 1
-        Rectangle:
-          pos: self.pos
-          size: self.size
-
-    CustomLabel:
-      text: "Service"
-      halign: "left"
-      size_hint_y: None
-      height: '20dp'
-
-    CustomTextInput:
-      id: service_input
-      multiline: False
-      size_hint_y: None
-      height: '40dp'
-      write_tab: False
-      background_color: 0.1, 0.1, 0.1, 1
-
-    CustomLabel:
-      text: "Login"
-      halign: "left"
-      size_hint_y: None
-      height: '20dp'
-
-    CustomTextInput:
-      id: login_input
-      multiline: False
-      size_hint_y: None
-      height: '40dp'
-      write_tab: False
-      background_color: 0.1, 0.1, 0.1, 1
-
-    CustomLabel:
-      text: "Password"
-      halign: "left"
-      size_hint_y: None
-      height: '20dp'
-
-    CustomTextInput:
-      id: password_input
-      password: True
-      multiline: False
-      size_hint_y: None
-      height: '40dp'
-      write_tab: False
-      background_color: 0.1, 0.1, 0.1, 1
-
-    CustomLabel:
-      text: "Notes"
-      halign: "left"
-      size_hint_y: None
-      height: '20dp'
-
-    CustomTextInput:
-      id: notes_input
-      multiline: False
-      size_hint_y: None
-      height: '40dp'
-      write_tab: False
-      background_color: 0.1, 0.1, 0.1, 1
-
-    CustomLabel:
-      id: error_label
-      text: ""
-      color: 1.0, 0.3, 0.3, 1
-      opacity: 0
-      size_hint_y: None
-      height: '20dp'
+  ScrollView:
 
     BoxLayout:
+      orientation: "vertical"
       size_hint_y: None
-      height: '48dp'
-      spacing: '12dp'
+      height: self.minimum_height
+      padding: '14dp'
+      spacing: '10dp'
 
-      CustomButton:
-        text: "Cancel"
-        background_color: 0.4, 0.4, 0.4, 1
-        on_release: root.dismiss()
+      Label:
+        text: "Add Entry"
+        font_size: '18sp'
+        bold: True
+        color: 1.0, 1.0, 1.0, 1
+        size_hint_y: None
+        height: '26dp'
 
-      CustomButton:
-        text: "Save"
-        on_release: root.save()
+      Widget:
+        size_hint_y: None
+        height: '1dp'
+        canvas:
+          Color:
+            rgba: 0.2, 0.5, 0.8, 1
+          Rectangle:
+            pos: self.pos
+            size: self.size
+
+      CustomLabel:
+        text: "Service"
+        halign: "left"
+        size_hint_y: None
+        height: '20dp'
+
+      CustomTextInput:
+        id: service_input
+        multiline: False
+        size_hint_y: None
+        height: '40dp'
+        write_tab: False
+        background_color: 0.1, 0.1, 0.1, 1
+
+      CustomLabel:
+        text: "Login"
+        halign: "left"
+        size_hint_y: None
+        height: '20dp'
+
+      CustomTextInput:
+        id: login_input
+        multiline: False
+        size_hint_y: None
+        height: '40dp'
+        write_tab: False
+        background_color: 0.1, 0.1, 0.1, 1
+
+      CustomLabel:
+        text: "Password"
+        halign: "left"
+        size_hint_y: None
+        height: '20dp'
+
+      CustomTextInput:
+        id: password_input
+        password: True
+        multiline: False
+        size_hint_y: None
+        height: '40dp'
+        write_tab: False
+        background_color: 0.1, 0.1, 0.1, 1
+
+      CustomLabel:
+        text: "Notes"
+        halign: "left"
+        size_hint_y: None
+        height: '20dp'
+
+      CustomTextInput:
+        id: notes_input
+        multiline: False
+        size_hint_y: None
+        height: '40dp'
+        write_tab: False
+        background_color: 0.1, 0.1, 0.1, 1
+
+      CustomLabel:
+        id: error_label
+        text: ""
+        color: 1.0, 0.3, 0.3, 1
+        opacity: 0
+        size_hint_y: None
+        height: '20dp'
+
+      BoxLayout:
+        size_hint_y: None
+        height: '48dp'
+        spacing: '12dp'
+
+        CustomButton:
+          text: "Cancel"
+          background_color: 0.4, 0.4, 0.4, 1
+          on_release: root.dismiss()
+
+        CustomButton:
+          text: "Save"
+          on_release: root.save()
