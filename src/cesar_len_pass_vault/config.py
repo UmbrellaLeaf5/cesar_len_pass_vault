@@ -12,6 +12,8 @@ from pathlib import Path
 from dotenv import load_dotenv
 
 from app.utils import is_android_platform
+from cesar_len_pass_vault._constants import ITERATIONS, ROUNDS, SALT_SIZE
+from cesar_len_pass_vault.cipher_settings import decrypt_setting, encrypt_setting
 
 
 # --------------------------------------------------------------------------------------
@@ -30,13 +32,11 @@ class CesarVaultConfig:
   """
 
   # Crypto settings (не меняются через UI)
-  SALT_SIZE: int = int(os.getenv("SALT_SIZE", "32"))
-  ITERATIONS: int = int(os.getenv("ITERATIONS", "100000"))
-  ROUNDS: int = int(os.getenv("ROUNDS", "3"))
+  SALT_SIZE: int = SALT_SIZE
+  ITERATIONS: int = ITERATIONS
+  ROUNDS: int = ROUNDS
 
-  # Crypto MAGIC constants (не выносятся в .env - это формат файла)
-  MAGIC_PRIMARY: bytes = b"CESAR_PRIMARY_V1"
-  MAGIC_BACKUP: bytes = b"CESAR_VAULT_V001"
+  # --------------------------------------------------------------------------
 
   def __init__(self) -> None:
     """
@@ -51,6 +51,8 @@ class CesarVaultConfig:
     self.YA_TOKEN = os.getenv("YA_TOKEN", "")
     self.REMOTE_PATH = os.getenv("REMOTE_PATH", "")
 
+  # --------------------------------------------------------------------------
+
   @property
   def BACKUP_REMOTE_PATH(self) -> str:
     """
@@ -59,53 +61,15 @@ class CesarVaultConfig:
     Если BACKUP_REMOTE_PATH задан в .env (backward compat), использует его.
     Иначе: REMOTE_PATH + ".backup"
     """
+
     env_backup = os.getenv("BACKUP_REMOTE_PATH", "")
+
     if env_backup:
       return env_backup
+
     return self.REMOTE_PATH + ".backup" if self.REMOTE_PATH else ""
 
-  # MARK: private
   # --------------------------------------------------------------------------
-
-  def _load_android_settings(self) -> None:
-    """
-    Загружает настройки из settings.json (Android).
-
-    Вызывается только если .env не содержит YA_TOKEN/REMOTE_PATH.
-    """
-
-    settings_path = self._env_path() / "settings.json"
-    if not settings_path.exists():
-      return
-
-    try:
-      with open(settings_path, encoding="utf-8") as f:
-        settings = json.load(f)
-
-      if "YA_TOKEN" in settings:
-        os.environ["YA_TOKEN"] = settings["YA_TOKEN"]
-      if "REMOTE_PATH" in settings:
-        os.environ["REMOTE_PATH"] = settings["REMOTE_PATH"]
-      if "BACKUP_REMOTE_PATH" in settings:
-        os.environ["BACKUP_REMOTE_PATH"] = settings["BACKUP_REMOTE_PATH"]
-
-    except (json.JSONDecodeError, OSError):
-      pass
-
-  def _env_path(self) -> Path:
-    """
-    Возвращает путь к директории для хранения настроек.
-
-    На Android: user_data_dir (через android.storage)
-    На Desktop: текущая рабочая директория
-    """
-    try:
-      from android.storage import app_storage_path  # type: ignore  # noqa: PLC0415
-
-      return Path(app_storage_path())
-
-    except Exception:
-      return Path.cwd()
 
   def save_settings(self, ya_token: str, remote_path: str) -> None:
     """
@@ -133,7 +97,7 @@ class CesarVaultConfig:
       with open(settings_path, "w", encoding="utf-8") as f:
         json.dump(
           {
-            "YA_TOKEN": ya_token,
+            "YA_TOKEN": encrypt_setting(ya_token),
             "REMOTE_PATH": remote_path,
             "SALT_SIZE": self.SALT_SIZE,
             "ITERATIONS": self.ITERATIONS,
@@ -159,6 +123,57 @@ class CesarVaultConfig:
         f.write("\n")
         f.write("# Yandex Disk paths\n")
         f.write(f"REMOTE_PATH={remote_path}\n")
+
+  # MARK: private
+  # --------------------------------------------------------------------------
+
+  def _load_android_settings(self) -> None:
+    """
+    Загружает настройки из settings.json (Android).
+
+    Вызывается только если .env не содержит YA_TOKEN/REMOTE_PATH.
+    """
+
+    settings_path = self._env_path() / "settings.json"
+    if not settings_path.exists():
+      return
+
+    try:
+      with open(settings_path, encoding="utf-8") as f:
+        settings = json.load(f)
+
+      if "YA_TOKEN" in settings:
+        token = settings["YA_TOKEN"]
+        if ":" in token:
+          try:
+            token = decrypt_setting(token)
+          except Exception:
+            pass  # fallback к plaintext
+        os.environ["YA_TOKEN"] = token
+
+      if "REMOTE_PATH" in settings:
+        os.environ["REMOTE_PATH"] = settings["REMOTE_PATH"]
+
+      if "BACKUP_REMOTE_PATH" in settings:
+        os.environ["BACKUP_REMOTE_PATH"] = settings["BACKUP_REMOTE_PATH"]
+
+    except (json.JSONDecodeError, OSError):
+      pass
+
+  def _env_path(self) -> Path:
+    """
+    Возвращает путь к директории для хранения настроек.
+
+    На Android: user_data_dir (через android.storage)
+    На Desktop: текущая рабочая директория
+    """
+    try:
+      from android.storage import app_storage_path  # type: ignore  # noqa: PLC0415
+
+      return Path(app_storage_path())
+
+    except Exception:
+      return Path.cwd()
 
 
 # --------------------------------------------------------------------------------------

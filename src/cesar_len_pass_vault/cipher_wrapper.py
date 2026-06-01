@@ -18,7 +18,7 @@ import struct
 from cesar_len_key.alphabet_shuffle import ShuffledAlphabet
 from cesar_len_key.cryptor import DEFAULT_ALPHABET
 
-from cesar_len_pass_vault.config import config
+from cesar_len_pass_vault._constants import MAGIC_BACKUP, ROUNDS, SALT_SIZE
 from cesar_len_pass_vault.crypto_utils import (
   HEADER_FORMAT,
   _derive_key,
@@ -44,11 +44,11 @@ def encrypt_vault_backup(vault_json: str, master_password: str) -> bytes:
     Зашифрованный блоб (MAGIC + salt + cipher_text), готовый к загрузке на Диск
   """
 
-  salt = os.urandom(config.SALT_SIZE)
+  salt = os.urandom(SALT_SIZE)
   stretched_key = _derive_key(master_password, salt)
   cipher_text = _encrypt_text(vault_json, stretched_key)
   body = cipher_text.encode("utf-8")
-  header = struct.pack(HEADER_FORMAT, config.MAGIC_BACKUP, salt)
+  header = struct.pack(HEADER_FORMAT, MAGIC_BACKUP, salt)
 
   return header + body
 
@@ -56,7 +56,7 @@ def encrypt_vault_backup(vault_json: str, master_password: str) -> bytes:
 # --------------------------------------------------------------------------------------
 
 
-def _encrypt_text(text: str, key: bytes, rounds: int = config.ROUNDS) -> str:
+def _encrypt_text(text: str, key: bytes, rounds: int = ROUNDS) -> str:
   """
   Многораундовое шифрование текста.
 
@@ -106,7 +106,7 @@ def decrypt_vault_backup(encrypted_blob: bytes, master_password: str) -> str:
     DecryptionError: если неверный мастер-пароль
   """
 
-  salt = validate_and_parse_header(encrypted_blob, config.MAGIC_BACKUP)
+  salt = validate_and_parse_header(encrypted_blob, MAGIC_BACKUP)
   body = get_body(encrypted_blob)
   stretched_key = _derive_key(master_password, salt)
 
@@ -122,7 +122,7 @@ def decrypt_vault_backup(encrypted_blob: bytes, master_password: str) -> str:
 # --------------------------------------------------------------------------------------
 
 
-def _decrypt_text(cipher_text: str, key: bytes, rounds: int = config.ROUNDS) -> str:
+def _decrypt_text(cipher_text: str, key: bytes, rounds: int = ROUNDS) -> str:
   """
   Многораундовое расшифрование (обратное _encrypt_text).
 

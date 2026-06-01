@@ -27,7 +27,7 @@ floating-point formula on one platform never locks you out:
 
 Both versions share the same master password but derive keys differently.
 They also use independent cryptographic salts, so the same plaintext produces
-completely different ciphertexts for each path.
+completely different cipher_texts for each path.
 
 The primary cipher (`cesar_len_key`) is fast and compact. The backup cipher
 is deliberately over‑engineered - multiple rounds, derived subkeys, forbidden

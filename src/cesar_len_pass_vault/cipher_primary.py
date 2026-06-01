@@ -11,7 +11,7 @@ import struct
 from cesar_len_key.cryptor import DEFAULT_ALPHABET, CryptedLines
 from cesar_len_key.word_cryption import CryptType
 
-from cesar_len_pass_vault.config import config
+from cesar_len_pass_vault._constants import MAGIC_PRIMARY, SALT_SIZE
 from cesar_len_pass_vault.crypto_utils import (
   HEADER_FORMAT,
   _derive_key,
@@ -42,16 +42,17 @@ def encrypt_vault_primary(vault_json: str, master_password: str) -> bytes:
     Зашифрованный блоб (MAGIC + salt + cipher_text)
   """
 
-  salt = os.urandom(config.SALT_SIZE)
+  salt = os.urandom(SALT_SIZE)
   stretched_key = _derive_key(master_password, salt)
   key_hex = stretched_key.hex()
 
   encrypted_lines = CryptedLines(
     [vault_json], key_hex, alphabet=DEFAULT_ALPHABET, crypt_type=CryptType.encr
   )
+
   cipher_text = encrypted_lines[0]
   body = cipher_text.encode("utf-8")
-  header = struct.pack(HEADER_FORMAT, config.MAGIC_PRIMARY, salt)
+  header = struct.pack(HEADER_FORMAT, MAGIC_PRIMARY, salt)
 
   return header + body
 
@@ -76,7 +77,7 @@ def decrypt_vault_primary(encrypted_blob: bytes, master_password: str) -> str:
     DecryptionError: если неверный пароль
   """
 
-  salt = validate_and_parse_header(encrypted_blob, config.MAGIC_PRIMARY)
+  salt = validate_and_parse_header(encrypted_blob, MAGIC_PRIMARY)
   body = get_body(encrypted_blob)
   stretched_key = _derive_key(master_password, salt)
   key_hex = stretched_key.hex()
