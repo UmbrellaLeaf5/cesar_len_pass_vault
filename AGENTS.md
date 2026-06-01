@@ -80,27 +80,91 @@ Any    → (connection error) → EMPTY
 
 ### Mark convention
 
-Use `# MARK:<label>` and a separator line to group related methods/fields
-inside classes and modules. Editors with minimap/minimap support render
+Use `# MARK:<label>` followed by a separator line to group related
+methods/fields inside classes and modules. Editors with minimap support render
 MARK labels as section headers.
 
-```python
-# MARK: download
-# --------------------------------------------------------------------------
+**Separator length: exactly 90 characters** (matching `line-length = 90` in
+`ruff.toml`). Count includes leading whitespace + `# ` + dashes.
 
-def download(self) -> None:
-    ...
+| Indentation | Prefix | Dashes | Total |
+| ----------- | ------ | ------ | ----- |
+| 0 (module)  | `# `   | 88     | 90    |
+| 2 spaces    | ` #`   | 86     | 90    |
+| 4 spaces    | `   #` | 84     | 90    |
+
+**Where to place separators:**
+
+1. **After imports** — one separator between the imports block and the first
+   top‑level definition:
+
+   ```python
+   from foo import bar
 
 
-# MARK: upload
-# --------------------------------------------------------------------------
+   # --------------------------------------------------------------------------
 
-def upload(self) -> None:
-    ...
-```
+   def first_function() -> None:
+       ...
+   ```
 
-Common MARK labels: `download`, `backup`, `upload`, `popup`, `private`,
-`state`, `encrypt`, `decrypt`, `converting`, `packing`.
+2. **Between method groups** — before each `# MARK:` label that starts a new
+   logical section inside a class:
+
+   ```python
+   class MyClass:
+       field: int = 0
+
+       # MARK: download
+       # --------------------------------------------------------------------------
+
+       def download(self) -> None:
+           ...
+   ```
+
+3. **Between function groups** — before each `# MARK:` label that groups
+   related top‑level functions:
+
+   ```python
+   # MARK: encrypt
+   # --------------------------------------------------------------------------
+
+   def encrypt(text: str) -> str:
+       ...
+
+
+   # MARK: decrypt
+   # --------------------------------------------------------------------------
+
+   def decrypt(text: str) -> str:
+       ...
+   ```
+
+4. **Between private methods** — before `# MARK: private` to separate public
+   API from internals:
+
+   ```python
+   class MyClass:
+
+       # --------------------------------------------------------------------------
+
+       def public_method(self) -> None:
+           ...
+
+       # MARK: private
+       # --------------------------------------------------------------------------
+
+       def _helper(self) -> None:
+           ...
+   ```
+
+**Rules:**
+
+- One blank line before `# MARK:`, one blank line after the separator.
+- Two blank lines between top‑level definitions (functions, classes).
+- No separator needed for single methods that don't belong to a group.
+- Common MARK labels: `download`, `backup`, `upload`, `popup`, `private`,
+  `state`, `encrypt`, `decrypt`, `converting`, `packing`.
 
 ### Popups
 
