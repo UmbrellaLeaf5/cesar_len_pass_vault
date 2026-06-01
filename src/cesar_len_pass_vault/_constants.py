@@ -8,10 +8,13 @@ import os
 
 from dotenv import load_dotenv
 
+from app.utils import is_android_platform
+
 
 # --------------------------------------------------------------------------------------
 
-load_dotenv()
+if not is_android_platform():
+  load_dotenv()
 
 # --------------------------------------------------------------------------------------
 

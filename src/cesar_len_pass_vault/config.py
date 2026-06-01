@@ -87,7 +87,7 @@ class CesarVaultConfig:
     os.environ["REMOTE_PATH"] = remote_path
 
     # Определяем платформу и пишем в соответствующий файл
-    try:
+    if is_android_platform():
       from android.storage import app_storage_path  # type: ignore  # noqa: PLC0415
 
       # Android: settings.json
@@ -108,7 +108,7 @@ class CesarVaultConfig:
           indent=2,
         )
 
-    except Exception:
+    else:
       # Desktop: .env
       env_path = Path.cwd() / ".env"
 
@@ -167,13 +167,13 @@ class CesarVaultConfig:
     На Android: user_data_dir (через android.storage)
     На Desktop: текущая рабочая директория
     """
-    try:
+
+    if is_android_platform():
       from android.storage import app_storage_path  # type: ignore  # noqa: PLC0415
 
       return Path(app_storage_path())
 
-    except Exception:
-      return Path.cwd()
+    return Path.cwd()
 
 
 # --------------------------------------------------------------------------------------
