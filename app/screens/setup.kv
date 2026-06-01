@@ -7,8 +7,8 @@
 
   BoxLayout:
     orientation: "vertical"
-    padding: 40
-    spacing: 20
+    padding: '40dp'
+    spacing: '20dp'
 
     canvas.before:
       Color:
@@ -22,35 +22,35 @@
 
     CustomLabel:
       text: "Setup"
-      font_size: 28
+      font_size: '28sp'
       halign: "center"
       size_hint_y: None
-      height: 50
+      height: '50dp'
 
     CustomLabel:
       text: "Yandex Disk OAuth Token"
       halign: "left"
       size_hint_y: None
-      height: 24
+      height: '24dp'
 
     CustomTextInput:
       id: token_input
       multiline: False
       size_hint_y: None
-      height: 48
+      height: '48dp'
       on_text_validate: root.save_and_continue()
 
     CustomLabel:
       text: "Remote Path"
       halign: "left"
       size_hint_y: None
-      height: 24
+      height: '24dp'
 
     CustomTextInput:
       id: path_input
       multiline: False
       size_hint_y: None
-      height: 48
+      height: '48dp'
       text: "/Приложения/cesar-len-key/vault.enc"
       on_text_validate: root.save_and_continue()
 
@@ -61,7 +61,7 @@
       opacity: 0
       halign: "center"
       size_hint_y: None
-      height: 24
+      height: '24dp'
 
     CustomButton:
       text: "Save & Continue"

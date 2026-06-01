@@ -73,6 +73,7 @@ class CesarVaultConfig:
 
     Вызывается только если .env не содержит YA_TOKEN/REMOTE_PATH.
     """
+
     settings_path = self._env_path() / "settings.json"
     if not settings_path.exists():
       return
@@ -102,6 +103,7 @@ class CesarVaultConfig:
       from android.storage import app_storage_path  # type: ignore  # noqa: PLC0415
 
       return Path(app_storage_path())
+
     except Exception:
       return Path.cwd()
 
@@ -113,6 +115,7 @@ class CesarVaultConfig:
         ya_token: Yandex Disk OAuth токен
         remote_path: путь к vault.enc на Яндекс.Диске
     """
+
     # Обновляем in-memory и os.environ
     self.YA_TOKEN = ya_token
     self.REMOTE_PATH = remote_path
@@ -144,6 +147,7 @@ class CesarVaultConfig:
     except Exception:
       # Desktop: .env
       env_path = Path.cwd() / ".env"
+
       with open(env_path, "w", encoding="utf-8") as f:
         f.write("# Yandex Disk authentication\n")
         f.write(f"YA_TOKEN={ya_token}\n")
@@ -174,4 +178,5 @@ def is_configured() -> bool:
   Returns:
       True, если YA_TOKEN и REMOTE_PATH не пусты
   """
+
   return bool(config.YA_TOKEN and config.REMOTE_PATH)

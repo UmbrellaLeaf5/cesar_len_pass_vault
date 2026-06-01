@@ -6,8 +6,8 @@
 
   BoxLayout:
     orientation: "vertical"
-    padding: 40
-    spacing: 20
+    padding: '40dp'
+    spacing: '20dp'
 
     canvas.before:
       Color:
@@ -21,23 +21,23 @@
 
     CustomLabel:
       text: "CesarLen PassVault"
-      font_size: 28
+      font_size: '28sp'
       halign: "center"
       size_hint_y: None
-      height: 50
+      height: '50dp'
 
     CustomLabel:
       text: "Master Password"
       halign: "left"
       size_hint_y: None
-      height: 24
+      height: '24dp'
 
     CustomTextInput:
       id: password_input
       password: True
       multiline: False
       size_hint_y: None
-      height: 48
+      height: '48dp'
       on_text_validate: root.unlock()
 
     CustomLabel:
@@ -47,7 +47,7 @@
       opacity: 0
       halign: "center"
       size_hint_y: None
-      height: 24
+      height: '24dp'
 
     CustomButton:
       text: "Unlock"
