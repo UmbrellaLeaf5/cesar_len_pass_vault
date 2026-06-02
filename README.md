@@ -11,7 +11,9 @@
 [![Ruff](https://github.com/UmbrellaLeaf5/cesar_len_pass_vault/workflows/Ruff/badge.svg)](https://github.com/UmbrellaLeaf5/cesar_len_pass_vault/actions/workflows/ruff.yml)
 [![Pyright](https://github.com/UmbrellaLeaf5/cesar_len_pass_vault/workflows/Pyright/badge.svg)](https://github.com/UmbrellaLeaf5/cesar_len_pass_vault/actions/workflows/pyright.yml) -->
 
-A **Kivy-based GUI password vault** that stores encrypted JSON on [Yandex.Disk](https://yandex.ru/dev/disk/). No local files - the vault exists only as an encrypted blob in the cloud.
+<img align="right" height="256" src="https://raw.githubusercontent.com/UmbrellaLeaf5/cesar_len_pass_vault/main/images/leaves.png"/>
+
+A **cross-platform password vault** with a Kivy-based GUI. Stores your passwords as AES-free, custom-encrypted JSON on [Yandex.Disk](https://yandex.ru/dev/disk/). No local vault files - everything lives in the cloud and is decrypted on the fly with your master password. Available for **Windows** (`.exe`) and **Android** (`.apk`), with both builds published automatically via GitHub Actions on every tagged release. The vault is protected by two independent encryption layers so that floating-point drift across platforms never locks you out.
 
 ## Dual encryption
 
