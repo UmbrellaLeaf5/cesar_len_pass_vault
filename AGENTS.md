@@ -2,9 +2,7 @@
 
 ## Project
 
-A Kivy-based GUI password vault. Stores encrypted JSON on Yandex Disk
-with dual encryption: primary via `cesar_len_key.CryptedLines`, backup
-via a custom multi-round Caesar cipher with SHA-256 key stretching.
+A Kivy-based GUI password vault. Stores encrypted JSON on Yandex Disk with dual encryption: primary via `cesar_len_key.CryptedLines`, backup via a custom multi-round Caesar cipher with SHA-256 key stretching.
 
 ## Setup
 
@@ -37,9 +35,7 @@ pyright .                       # type-check (adjust path if necessary)
 uv run pytest -v                # unit tests
 ```
 
-**LSP is mandatory.** Configure `pyright-langserver` and `ruff server` in your
-editor. After every change, confirm lint, format, and type-check show **0
-errors**.
+**LSP is mandatory.** Configure `pyright-langserver` and `ruff server` in your editor. After every change, confirm lint, format, and type-check show **0 errors**.
 
 ## Fix formatting & imports
 
@@ -80,12 +76,9 @@ Any    → (connection error) → EMPTY
 
 ### Mark convention
 
-Use `# MARK:<label>` followed by a separator line to group related
-methods/fields inside classes and modules. Editors with minimap support render
-MARK labels as section headers.
+Use `# MARK:<label>` followed by a separator line to group related methods/fields inside classes and modules. Editors with minimap support render MARK labels as section headers.
 
-**Separator length: exactly 90 characters** (matching `line-length = 90` in
-`ruff.toml`). Count includes leading whitespace + `# ` + dashes.
+**Separator length: exactly 90 characters** (matching `line-length = 90` in `ruff.toml`). Count includes leading whitespace + `# ` + dashes.
 
 | Indentation | Prefix | Dashes | Total |
 | ----------- | ------ | ------ | ----- |
@@ -95,8 +88,7 @@ MARK labels as section headers.
 
 **Where to place separators:**
 
-1. **After imports** — one separator between the imports block and the first
-   top‑level definition:
+1. **After imports** - one separator between the imports block and the first top‑level definition:
 
    ```python
    from foo import bar
@@ -108,8 +100,7 @@ MARK labels as section headers.
        ...
    ```
 
-2. **Between method groups** — before each `# MARK:` label that starts a new
-   logical section inside a class:
+2. **Between method groups** - before each `# MARK:` label that starts a new logical section inside a class:
 
    ```python
    class MyClass:
@@ -122,8 +113,7 @@ MARK labels as section headers.
            ...
    ```
 
-3. **Between function groups** — before each `# MARK:` label that groups
-   related top‑level functions:
+3. **Between function groups** - before each `# MARK:` label that groups related top‑level functions:
 
    ```python
    # MARK: encrypt
@@ -140,8 +130,7 @@ MARK labels as section headers.
        ...
    ```
 
-4. **Between private methods** — before `# MARK: private` to separate public
-   API from internals:
+4. **Between private methods** - before `# MARK: private` to separate public API from internals:
 
    ```python
    class MyClass:
@@ -163,37 +152,27 @@ MARK labels as section headers.
 - One blank line before `# MARK:`, one blank line after the separator.
 - Two blank lines between top‑level definitions (functions, classes).
 - No separator needed for single methods that don't belong to a group.
-- Common MARK labels: `download`, `backup`, `upload`, `popup`, `private`,
-  `state`, `encrypt`, `decrypt`, `converting`, `packing`.
+- Common MARK labels: `download`, `backup`, `upload`, `popup`, `private`, `state`, `encrypt`, `decrypt`, `converting`, `packing`.
 
 ### Popups
 
 - Each popup is a class in `app/popups/` with a matching `.kv` file.
 - Popup launcher methods live on the screen that needs them (e.g. `VaultScreen.add_entry()`).
-- Use `ObjectProperty` callbacks (not ScreenManager traversal) to communicate
-  results back to the caller.
+- Use `ObjectProperty` callbacks (not ScreenManager traversal) to communicate results back to the caller.
 - Example: `AddEntryPopup.target_editor` receives the editor to write to.
 
 ### Services
 
-- `app/services/vault_ops.py` is the only module that imports from
-  `cesar_len_pass_vault.sync` (download/upload) and `cesar_len_pass_vault`
-  (pack/unpack). Screens never import these directly.
-- Service functions accept primitives or model objects and raise typed
-  exceptions (`YaConnectionError`, `json.JSONDecodeError`, `DecryptionError`).
-- Screens call service functions and handle UI updates (state changes,
-  status messages) in try/except blocks.
+- `app/services/vault_ops.py` is the only module that imports from `cesar_len_pass_vault.sync` (download/upload) and `cesar_len_pass_vault` (pack/unpack). Screens never import these directly.
+- Service functions accept primitives or model objects and raise typed exceptions (`YaConnectionError`, `json.JSONDecodeError`, `DecryptionError`).
+- Screens call service functions and handle UI updates (state changes, status messages) in try/except blocks.
 
 ### Indentation & layout
 
 - **2‑space indentation** everywhere.
 - **Line length**: 90 characters.
-- **2 blank lines** between top‑level definitions (functions, classes) and
-  after imports (`lines-after-imports = 2`).
-- **Blank line before control flow** - insert a blank line before every `if`,
-  `else`, `elif`, `for`, `while`, `try`, `except`, `finally`, `with`, `raise`,
-  `assert`, `return`, `continue` that sits at the same indentation level as its
-  containing block. Deeply nested one‑liners may omit the blank line.
+- **2 blank lines** between top‑level definitions (functions, classes) and after imports (`lines-after-imports = 2`).
+- **Blank line before control flow** - insert a blank line before every `if`, `else`, `elif`, `for`, `while`, `try`, `except`, `finally`, `with`, `raise`, `assert`, `return`, `continue` that sits at the same indentation level as its containing block. Deeply nested one‑liners may omit the blank line.
 
   ```python
   # Good
@@ -206,8 +185,7 @@ MARK labels as section headers.
       process(item)
   ```
 
-- **Endline after docstrings** - always put an extra blank line after a
-  function or class docstring.
+- **Endline after docstrings** - always put an extra blank line after a function or class docstring.
 
   ```python
   def my_func():
@@ -230,8 +208,7 @@ MARK labels as section headers.
 
 ### Imports
 
-- After editing imports, run `ruff check --fix` to sort them. Ruff's `I` rule
-  handles ordering, grouping (stdlib → third‑party → project), and spacing.
+- After editing imports, run `ruff check --fix` to sort them. Ruff's `I` rule handles ordering, grouping (stdlib → third‑party → project), and spacing.
 
 ### Type annotations
 
@@ -240,22 +217,19 @@ MARK labels as section headers.
 
 ### Exports
 
-- In `__init__.py` files, declare the public API with `__all__`. Ruff respects
-  `__all__`, so you don't need `import X as X` or `# noqa` comments.
+- In `__init__.py` files, declare the public API with `__all__`. Ruff respects `__all__`, so you don't need `import X as X` or `# noqa` comments.
 
 ### Naming
 
 - Prefer specific, descriptive names. Avoid ambiguous abbreviations.
-  - Example: `resolved_api_key` rather than `key` when multiple keys exist.
+- Example: `resolved_api_key` rather than `key` when multiple keys exist.
 
 ## Testing
 
-- Tests that depend on Yandex Disk (`test_sync.py`) require a valid `YA_TOKEN`
-  in `.env` and are auto-skipped if the token is missing or invalid.
+- Tests that depend on Yandex Disk (`test_sync.py`) require a valid `YA_TOKEN` in `.env` and are auto-skipped if the token is missing or invalid.
 - Use `uv run pytest tests/ -v` to run all tests.
 - Use `uv run pytest tests/test_file.py::test_name -v` for a single test.
 
 ## Miscellaneous
 
-- **Never edit `uv.lock` manually.** It is regenerated by `uv lock` or
-  `uv sync` when dependencies change.
+- **Never edit `uv.lock` manually.** It is regenerated by `uv lock` or `uv sync` when dependencies change.

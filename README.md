@@ -11,63 +11,45 @@
 [![Ruff](https://github.com/UmbrellaLeaf5/cesar_len_pass_vault/workflows/Ruff/badge.svg)](https://github.com/UmbrellaLeaf5/cesar_len_pass_vault/actions/workflows/ruff.yml)
 [![Pyright](https://github.com/UmbrellaLeaf5/cesar_len_pass_vault/workflows/Pyright/badge.svg)](https://github.com/UmbrellaLeaf5/cesar_len_pass_vault/actions/workflows/pyright.yml) -->
 
-A **Kivy-based GUI password vault** that stores encrypted JSON on
-[Yandex.Disk](https://yandex.ru/dev/disk/). No local files - the vault
-exists only as an encrypted blob in the cloud.
+A **Kivy-based GUI password vault** that stores encrypted JSON on [Yandex.Disk](https://yandex.ru/dev/disk/). No local files - the vault exists only as an encrypted blob in the cloud.
 
 ## Dual encryption
 
-Every vault is stored **twice** with independent algorithms so that a drifting
-floating-point formula on one platform never locks you out:
+Every vault is stored **twice** with independent algorithms so that a drifting floating-point formula on one platform never locks you out:
 
 | Version | Library                                                             | Cipher                                                                                                       |
 | ------- | ------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------ |
 | Primary | [**cesar_len_key**](https://github.com/UmbrellaLeaf5/cesar_len_key) | `CryptedLines` - word-level Caesar shuffle with trig‑based key expansion                                     |
 | Backup  | `cipher_wrapper.py`                                                 | Multi‑round Caesar with SHA‑256 key stretching, HMAC subkeys, and integer‑only shift computation (no floats) |
 
-Both versions share the same master password but derive keys differently.
-They also use independent cryptographic salts, so the same plaintext produces
-completely different cipher_texts for each path.
+Both versions share the same master password but derive keys differently. They also use independent cryptographic salts, so the same plaintext produces completely different cipher_texts for each path.
 
-The primary cipher (`cesar_len_key`) is fast and compact. The backup cipher
-is deliberately over‑engineered - multiple rounds, derived subkeys, forbidden
-zero‑shifts - specifically to avoid the floating‑point pitfalls that could
-cause the primary cipher to produce different output on different hardware.
+The primary cipher (`cesar_len_key`) is fast and compact. The backup cipher is deliberately over‑engineered - multiple rounds, derived subkeys, forbidden zero‑shifts - specifically to avoid the floating‑point pitfalls that could cause the primary cipher to produce different output on different hardware.
 
 ## How it works - user experience
 
 ### 0. First launch - setup
 
-On the very first launch (or when `.env` is missing) the app opens the
-**Setup** screen. Enter your **Yandex.Disk OAuth token** and the **remote
-path** where the vault should live, then press **Save & Continue**. The app
-writes the settings to `.env` and proceeds to the Unlock screen.
+On the very first launch (or when `.env` is missing) the app opens the **Setup** screen. Enter your **Yandex.Disk OAuth token** and the **remote path** where the vault should live, then press **Save & Continue**. The app writes the settings and proceeds to the Unlock screen.
 
-On subsequent launches the Setup screen is skipped - your credentials are
-reused from `.env`.
+- **Desktop:** settings saved to `.env` in the working directory.
+- **Android:** settings saved to `settings.json` in the app's private storage (`/data/data/<package>/files/settings.json`). The `YA_TOKEN` is encrypted with a Caesar cipher + SHA‑256 key stretching (format: `salt:encrypted_token`).
 
-On Android, settings are stored in the app's private `user_data_dir` as
-`settings.json` (Android does not use `.env` files).
+On subsequent launches the Setup screen is skipped - your credentials are reused from `.env` (desktop) or decrypted from `settings.json` (Android).
 
 ### 1. Unlock
 
-The app opens to a dark unlock screen with a single password field. Type your
-master password and press **Unlock** (or Enter).
+The app opens to a dark unlock screen with a single password field. Type your master password and press **Unlock** (or Enter).
 
-Behind the scenes the app immediately reaches Yandex.Disk, downloads the
-encrypted vault, and tries to decrypt it with the password you just entered.
-If the password is correct, you land on the main editor screen with your data
-already displayed - no extra clicks needed.
+Behind the scenes the app immediately reaches Yandex.Disk, downloads the encrypted vault, and tries to decrypt it with the password you just entered. If the password is correct, you land on the main editor screen with your data already displayed - no extra clicks needed.
 
-If the password is **wrong**, the screen background turns pale red and a
-message says "Invalid master password". You can retry immediately.
+If the password is **wrong**, the screen background turns pale red and a message says "Invalid master password". You can retry immediately.
 
 ### 2. Main editor
 
 Once unlocked you see:
 
-- A **toolbar** at the top with four buttons: **Download**, **Upload**,
-  **+ Entry**, and a **settings gear** (⋆).
+- A **toolbar** at the top with four buttons: **Download**, **Upload**, **+ Entry**, and a **settings gear** (⋆).
 - A full‑screen **text editor** showing your vault as formatted JSON.
 - A **status bar** at the bottom with timestamps and entry counts.
 
@@ -80,39 +62,33 @@ The toolbar adapts to the current state:
 | **Loading** - network in progress   | -        | -      | -       |
 | **Split** - two editors visible     | +        | +      | +       |
 
-### 3. Adding entries
+### 3. Adding and uploading entries
 
-Press **+ Entry** to open a popup with four fields: **Service**, **Login**,
-**Password**, and **Notes**. Fill in at least Service and Login, then press
-**Save**. The entry is appended as a JSON object to the editor. Press
-**Upload** to push the updated vault to the cloud.
+Press **+ Entry** to open a popup with four fields: **Service**, **Login**, **Password**, and **Notes**. Fill in at least Service and Login, then press **Save**. The entry is appended as a JSON object to the editor. Press **Upload** to push the updated vault to the cloud.
+
+On **Upload** all entries are automatically sorted alphabetically by `service` (case‑insensitive). Both the primary and backup vaults are sorted, and the editor text is updated to reflect the sorted order.
 
 ### 4. Split mode - comparing ciphers
 
-The vault is encrypted **twice** with different algorithms (see
-[Dual encryption](#dual-encryption) below). Normally you only see the primary
-version. Press the **gear icon** and choose **Download Backup** to load the
-backup version alongside the primary one - two editors side by side.
+The vault is encrypted **twice** with different algorithms (see [Dual encryption](#dual-encryption) below). Normally you only see the primary version. Press the **gear icon** and choose **Download Backup** to load the backup version alongside the primary one - two editors side by side.
 
-This is useful when the primary cipher fails to decode correctly (e.g. due to
-floating‑point quirks on a different CPU). You can inspect both versions and
-pick the one you trust.
+This is useful when the primary cipher fails to decode correctly (e.g. due to floating‑point quirks on a different CPU). You can inspect both versions and pick the one you trust.
 
-In split mode **+ Entry** adds to the right (backup) editor. On **Upload** the
-app checks whether the two editors differ. If they do, a popup asks which
-version to keep - then **both** cloud files are synchronised with the same
-chosen content.
+In split mode **+ Entry** adds to the right (backup) editor. On **Upload** the app checks whether the two editors differ. If they do, a popup asks which version to keep - then **both** cloud files are synchronised with the same chosen content (and sorted alphabetically by `service`).
 
 ### 5. Error recovery
 
-If a network call fails, the editor drops back to the **Empty** state: a blank
-JSON editor with only the **Download** button active. You can retry at any
-time.
+If a network call fails, the editor drops back to the **Empty** state: a blank JSON editor with only the **Download** button active. You can retry at any time.
+
+### 6. Token protection (Android)
+
+On Android the Yandex.Disk OAuth token is encrypted before being written to `settings.json`. The encryption uses a multi‑round Caesar cipher with SHA‑256 key stretching derived from the app's hardcoded secret - the same algorithm that protects the backup vault.
+
+The stored token format is `salt:encrypted_token` (base64). Older plaintext tokens are still accepted (backward compatibility).
 
 ## State machine
 
-The vault screen behaves as a deterministic state machine driven by the
-`VaultState` enum:
+The vault screen behaves as a deterministic state machine driven by the `VaultState` enum:
 
 ```
          ┌──────────────┐
@@ -144,9 +120,7 @@ The vault screen behaves as a deterministic state machine driven by the
   └─────────────┘
 ```
 
-Every transition goes through a single method (`_update_ui_by_state`) that
-updates toolbar availability, editor read‑only flag, and split‑editor
-visibility in one atomic step.
+Every transition goes through a single method (`_update_ui_by_state`) that updates toolbar availability, editor read‑only flag, and split‑editor visibility in one atomic step.
 
 ## Quick start
 
@@ -157,8 +131,7 @@ uv sync
 uv run cesar-vault
 ```
 
-On first launch, the **Setup** screen will ask for your Yandex.Disk token
-and remote path. The settings are saved to `.env` and reused automatically.
+On first launch, the **Setup** screen will ask for your Yandex.Disk token and remote path. The settings are saved to `.env` and reused automatically.
 
 ### How to get a Yandex.Disk OAuth token
 
@@ -176,12 +149,9 @@ and remote path. The settings are saved to `.env` and reused automatically.
 | `ITERATIONS`  | `100000` | SHA‑256 key stretching rounds             |
 | `ROUNDS`      | `3`      | Encryption rounds for backup cipher       |
 
-`BACKUP_REMOTE_PATH` is computed automatically as `REMOTE_PATH + ".backup"`.
-Specify it explicitly in `.env` only if you need a custom backup location
-(backward compatibility is preserved).
+`BACKUP_REMOTE_PATH` is computed automatically as `REMOTE_PATH + ".backup"`. Specify it explicitly in `.env` only if you need a custom backup location (backward compatibility is preserved).
 
-> **Tip:** All values can be set through the **Setup** screen on first launch.
-> Manual `.env` editing is optional.
+> **Tip:** All values can be set through the **Setup** screen on first launch. Manual `.env` editing is optional.
 
 ## Building
 
@@ -192,8 +162,7 @@ uv run pyinstaller pyinstaller.spec
 # Output: dist/CesarLen-PassVault/
 ```
 
-The spec uses `--onedir` with the ANGLE backend. All `.kv` and image files
-are bundled automatically.
+The spec uses `--onedir` with the ANGLE backend. All `.kv` and image files are bundled automatically.
 
 ### Android `.apk`
 
@@ -203,15 +172,16 @@ buildozer android release
 # Output: bin/*.apk
 ```
 
-Requires Linux. On Android the settings are saved as `settings.json` in the
-app's private directory (no `.env` files).
+Requires Linux. On Android the settings are saved as `settings.json` in the app's private directory (no `.env` files).
 
-### Automated releases
+### [Automated releases](https://github.com/UmbrellaLeaf5/cesar_len_pass_vault/releases)
 
-CI workflows (`.github/workflows/`) trigger on any tag:
+All automated builds are published as official releases. Every CI run triggered by a tag produces ready-to-use artifacts:
 
 - `build-exe.yml` - Windows `.exe` (zip archive)
 - `build-apk.yml` - Android `.apk`
+
+Visit the [releases page](https://github.com/UmbrellaLeaf5/cesar_len_pass_vault/releases) to download the latest versions.
 
 ## License
 
