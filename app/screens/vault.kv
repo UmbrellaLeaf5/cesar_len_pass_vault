@@ -5,6 +5,7 @@
   backup_editor: backup_editor
   status_label: status_label
   toolbar: toolbar
+  hide_button: hide_button
 
   BoxLayout:
     orientation: "vertical"
@@ -42,6 +43,13 @@
           on_release: root.open_add_entry()
 
         CustomButton:
+          id: hide_button
+          text: "Show"
+          width: "60dp"
+          size_hint_x: None
+          on_release: root._toggle_passwords()
+
+        CustomButton:
           text: "*"
           font_size: '20sp'
           width: '48dp'
@@ -56,6 +64,7 @@
         text: ""
         background_color: 0.1, 0.1, 0.1, 1
         foreground_color: 1.0, 1.0, 1.0, 1
+        on_text: root._on_editor_text()
 
       CustomTextInput:
         id: backup_editor
