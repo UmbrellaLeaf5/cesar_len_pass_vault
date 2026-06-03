@@ -139,13 +139,14 @@ class VaultScreen(Screen):
   def upload(self) -> None:
     """Открыть попап, проверить рассинхрон и загрузить на Яндекс.Диск."""
 
-    if self._state == VaultState.SPLIT and self.editor.text != self.backup_editor.text:
+    if (
+      self._state == VaultState.SPLIT
+      and self._primary_visible_json != self._backup_visible_json
+    ):
       self.open_sync()
       return
 
     self._do_upload()
-
-  # --------------------------------------------------------------------------------------
 
   # --------------------------------------------------------------------------------------
 
@@ -219,6 +220,9 @@ class VaultScreen(Screen):
 
       if is_split and backup_vault is not None:
         self._backup_visible_json = vault_to_json(backup_vault)
+
+      else:
+        self._backup_visible_json = self._primary_visible_json
 
       self.status_label.text = (
         f"Saved {datetime.now().strftime('%H:%M')} - {len(primary_vault.entries)} entries"
@@ -352,8 +356,10 @@ class VaultScreen(Screen):
 
       self.editor.readonly = True
 
-      if is_split and self.backup_editor.text != hidden_backup:
-        self.backup_editor.text = hidden_backup
+      if is_split:
+        if self.backup_editor.text != hidden_backup:
+          self.backup_editor.text = hidden_backup
+
         self.backup_editor.readonly = True
 
     else:
@@ -362,8 +368,10 @@ class VaultScreen(Screen):
 
       self.editor.readonly = False
 
-      if is_split and self.backup_editor.text != self._backup_visible_json:
-        self.backup_editor.text = self._backup_visible_json
+      if is_split:
+        if self.backup_editor.text != self._backup_visible_json:
+          self.backup_editor.text = self._backup_visible_json
+
         self.backup_editor.readonly = False
 
   # --------------------------------------------------------------------------------------

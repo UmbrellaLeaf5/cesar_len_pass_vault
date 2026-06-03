@@ -4,6 +4,7 @@
     "boxlayout",
     "calcsize",
     "cryptor",
+    "dotenv",
     "halign",
     "kivy",
     "MEIPASS",
