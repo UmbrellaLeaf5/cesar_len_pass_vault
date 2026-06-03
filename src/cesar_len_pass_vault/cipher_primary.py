@@ -22,7 +22,7 @@ from cesar_len_pass_vault.exceptions import DecryptionError
 
 
 # MARK: encrypt
-# --------------------------------------------------------------------------------------
+# ----------------------------------------------------------------------------------------
 
 
 def encrypt_vault_primary(vault_json: str, master_password: str) -> bytes:
@@ -58,7 +58,7 @@ def encrypt_vault_primary(vault_json: str, master_password: str) -> bytes:
 
 
 # MARK: decrypt
-# --------------------------------------------------------------------------------------
+# ----------------------------------------------------------------------------------------
 
 
 def decrypt_vault_primary(encrypted_blob: bytes, master_password: str) -> str:

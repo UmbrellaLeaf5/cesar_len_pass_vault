@@ -8,11 +8,11 @@ import struct
 from cesar_len_pass_vault._constants import ITERATIONS, SALT_SIZE
 
 
-# --------------------------------------------------------------------------------------
+# ----------------------------------------------------------------------------------------
 
 HEADER_FORMAT = f">16s{SALT_SIZE}s".encode()
 
-# --------------------------------------------------------------------------------------
+# ----------------------------------------------------------------------------------------
 
 
 def _derive_key(master_password: str, salt: bytes) -> bytes:
@@ -31,7 +31,7 @@ def _derive_key(master_password: str, salt: bytes) -> bytes:
   return key
 
 
-# --------------------------------------------------------------------------------------
+# ----------------------------------------------------------------------------------------
 
 
 def validate_and_parse_header(encrypted_blob: bytes, expected_magic: bytes) -> bytes:
@@ -62,7 +62,7 @@ def validate_and_parse_header(encrypted_blob: bytes, expected_magic: bytes) -> b
   return salt
 
 
-# --------------------------------------------------------------------------------------
+# ----------------------------------------------------------------------------------------
 
 
 def get_body(encrypted_blob: bytes) -> bytes:

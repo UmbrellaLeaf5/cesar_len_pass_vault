@@ -29,11 +29,11 @@ from cesar_len_pass_vault.models import Vault
 from cesar_len_pass_vault.sync import YaConnectionError
 
 
-# --------------------------------------------------------------------------------------
+# ----------------------------------------------------------------------------------------
 
 Builder.load_file(resource_path("app/screens/vault.kv"))
 
-# --------------------------------------------------------------------------------------
+# ----------------------------------------------------------------------------------------
 
 
 class VaultScreen(Screen):
@@ -52,7 +52,7 @@ class VaultScreen(Screen):
 
   _primary_visible_json: str = ""
   _backup_visible_json: str = ""
-  _password_hidden: bool = True
+  _passwords_masked: bool = True
 
   # --------------------------------------------------------------------------------------
 
@@ -69,14 +69,9 @@ class VaultScreen(Screen):
       self.preloaded_text = ""
 
     else:
-      self.toolbar.download_enabled = True
-      self.toolbar.upload_enabled = False
-      self.toolbar.add_enabled = False
-      self.editor.readonly = True
+      self._update_ui_by_state(VaultState.EMPTY)
       self.editor.text = ""
       self.status_label.text = ""
-
-      self._hide_backup_editor()
 
   # MARK: download
   # --------------------------------------------------------------------------------------
@@ -91,14 +86,14 @@ class VaultScreen(Screen):
       primary_json_str, amount = download_primary(self._get_password())
       self._primary_visible_json = primary_json_str
 
-      self._hide_backup_editor()
+      self._collapse_backup_editor()
       self._update_ui_by_state(VaultState.LOADED)
       self.status_label.text = (
         f"Loaded {datetime.now().strftime('%H:%M')} - {amount} entries"
       )
 
     except FileNotFoundError:
-      self._hide_backup_editor()
+      self._collapse_backup_editor()
       self._update_ui_by_state(VaultState.LOADED)
       self.status_label.text = "Vault not found. Create a new one."
 
@@ -106,13 +101,8 @@ class VaultScreen(Screen):
       self._update_ui_by_state(VaultState.EMPTY)
       self.status_label.text = "Invalid master password"
 
-    except YaConnectionError as e:
-      self._update_ui_by_state(VaultState.EMPTY)
-      self.status_label.text = f"Connection error: {e}"
-
-    except Exception as e:
-      self._update_ui_by_state(VaultState.EMPTY)
-      self.status_label.text = f"Error: {e}"
+    except (YaConnectionError, Exception) as e:
+      self._handle_error(e)
 
   # MARK: backup
   # --------------------------------------------------------------------------------------
@@ -140,13 +130,8 @@ class VaultScreen(Screen):
       self._update_ui_by_state(VaultState.EMPTY)
       self.status_label.text = "Invalid master password"
 
-    except YaConnectionError as e:
-      self._update_ui_by_state(VaultState.EMPTY)
-      self.status_label.text = f"Connection error: {e}"
-
-    except Exception as e:
-      self._update_ui_by_state(VaultState.EMPTY)
-      self.status_label.text = f"Error: {e}"
+    except (YaConnectionError, Exception) as e:
+      self._handle_error(e)
 
   # MARK: upload
   # --------------------------------------------------------------------------------------
@@ -162,15 +147,22 @@ class VaultScreen(Screen):
 
   # --------------------------------------------------------------------------------------
 
-  def _do_upload(self) -> None:
-    """Зашифровать содержимое редактора и загрузить на Яндекс.Диск."""
+  # --------------------------------------------------------------------------------------
+
+  def _validate_editor_json(self) -> tuple[Vault | None, Vault | None, bool]:
+    """Валидирует JSON из редакторов.
+
+    Returns:
+      (primary_vault, backup_vault, is_split).
+      Если ошибка — (None, None, False), статус уже выставлен.
+    """
 
     primary_json = self._primary_visible_json.strip()
 
     if not primary_json:
       self.status_label.text = "Nothing to upload: editor is empty"
 
-      return
+      return None, None, False
 
     try:
       primary_vault = json_to_vault(primary_json)
@@ -178,9 +170,8 @@ class VaultScreen(Screen):
     except json.JSONDecodeError as e:
       self.status_label.text = f"JSON error: line {e.lineno}, column {e.colno}"
 
-      return
+      return None, None, False
 
-    # В split режиме - валидируем и backup редактор
     is_split = self._state == VaultState.SPLIT
     backup_vault: Vault | None = None
 
@@ -189,7 +180,7 @@ class VaultScreen(Screen):
 
       if not backup_json:
         self.status_label.text = "Backup editor is empty"
-        return
+        return None, None, False
 
       try:
         backup_vault = json_to_vault(backup_json)
@@ -199,27 +190,35 @@ class VaultScreen(Screen):
           f"JSON error in backup: line {e.lineno}, column {e.colno}"
         )
 
-        return
+        return None, None, False
+
+    return primary_vault, backup_vault, is_split
+
+  # --------------------------------------------------------------------------------------
+
+  def _do_upload(self) -> None:
+    """Зашифровать содержимое редактора и загрузить на Яндекс.Диск."""
+
+    primary_vault, backup_vault, is_split = self._validate_editor_json()
+
+    if primary_vault is None:
+      return
 
     self._update_ui_by_state(VaultState.LOADING)
 
     try:
       pw = self._get_password()
 
-      # Загружаем оба хранилища
       upload_vault(
         primary_vault,
         backup_vault if (is_split and backup_vault is not None) else primary_vault,
         pw,
       )
 
-      # Обновляем оба visible JSON отсортированным контентом
       self._primary_visible_json = vault_to_json(primary_vault)
 
       if is_split and backup_vault is not None:
         self._backup_visible_json = vault_to_json(backup_vault)
-
-      self._apply_hide_state()
 
       self.status_label.text = (
         f"Saved {datetime.now().strftime('%H:%M')} - {len(primary_vault.entries)} entries"
@@ -227,13 +226,8 @@ class VaultScreen(Screen):
 
       self._update_ui_by_state(VaultState.SPLIT if is_split else VaultState.LOADED)
 
-    except YaConnectionError as e:
-      self._update_ui_by_state(VaultState.EMPTY)
-      self.status_label.text = f"Connection error: {e}"
-
-    except Exception as e:
-      self._update_ui_by_state(VaultState.EMPTY)
-      self.status_label.text = f"Error: {e}"
+    except (YaConnectionError, Exception) as e:
+      self._handle_error(e)
 
   # MARK: popup
   # --------------------------------------------------------------------------------------
@@ -241,9 +235,9 @@ class VaultScreen(Screen):
   def open_add_entry(self) -> None:
     """Открыть попап добавления записи."""
 
-    was_hidden = self._password_hidden
+    was_masked = self._passwords_masked
 
-    if was_hidden:
+    if was_masked:
       self._toggle_passwords()
 
     popup = AddEntryPopup()
@@ -251,7 +245,7 @@ class VaultScreen(Screen):
       self.backup_editor if self._state == VaultState.SPLIT else self.editor
     )
 
-    popup.bind(on_dismiss=lambda *args: self._on_add_entry_dismissed(was_hidden))  # type: ignore[arg-type]
+    popup.bind(on_dismiss=lambda *args: self._on_add_entry_dismissed(was_masked))  # type: ignore[arg-type]
     popup.open()
 
   # --------------------------------------------------------------------------------------
@@ -288,6 +282,19 @@ class VaultScreen(Screen):
 
   # --------------------------------------------------------------------------------------
 
+  def _handle_error(self, error: Exception) -> None:
+    """Обработать ошибку сети или общую ошибку."""
+
+    if isinstance(error, YaConnectionError):
+      self.status_label.text = f"Connection error: {error}"
+
+    else:
+      self.status_label.text = f"Error: {error}"
+
+    self._update_ui_by_state(VaultState.EMPTY)
+
+  # --------------------------------------------------------------------------------------
+
   def _get_password(self) -> str:
     """Получить мастер-пароль из приложения."""
 
@@ -297,7 +304,7 @@ class VaultScreen(Screen):
 
   # --------------------------------------------------------------------------------------
 
-  def _hide_backup_editor(self) -> None:
+  def _collapse_backup_editor(self) -> None:
     """Скрыть backup редактор (возврат к одному редактору)."""
 
     self.backup_editor.text = ""
@@ -309,7 +316,7 @@ class VaultScreen(Screen):
 
   # --------------------------------------------------------------------------------------
 
-  def _on_add_entry_dismissed(self, was_hidden: bool) -> None:
+  def _on_add_entry_dismissed(self, was_masked: bool) -> None:
     """После закрытия попапа добавить записи - обновить _visible_json."""
 
     if self._state == VaultState.SPLIT:
@@ -317,7 +324,7 @@ class VaultScreen(Screen):
     else:
       self._primary_visible_json = self.editor.text
 
-    if was_hidden:
+    if was_masked:
       self._apply_hide_state()
 
   # --------------------------------------------------------------------------------------
@@ -325,38 +332,43 @@ class VaultScreen(Screen):
   def _toggle_passwords(self) -> None:
     """Переключить режим show/hide для всех редакторов."""
 
-    self._password_hidden = not self._password_hidden
+    self._passwords_masked = not self._passwords_masked
     self._apply_hide_state()
 
   # --------------------------------------------------------------------------------------
 
   def _apply_hide_state(self) -> None:
-    """Применить текущее состояние _password_hidden к редакторам."""
+    """Применить текущее состояние _passwords_masked к редакторам."""
 
-    self.hide_button.text = "Show" if self._password_hidden else "Hide"
+    self.hide_button.text = "Show" if self._passwords_masked else "Hide"
     is_split = self._state == VaultState.SPLIT
 
-    if self._password_hidden:
-      hidden_primary = self._hide_passwords(self._primary_visible_json)
-      self.editor.text = hidden_primary
+    if self._passwords_masked:
+      hidden_primary = self._mask_passwords(self._primary_visible_json)
+      hidden_backup = self._mask_passwords(self._backup_visible_json)
+
+      if self.editor.text != hidden_primary:
+        self.editor.text = hidden_primary
+
       self.editor.readonly = True
 
-      if is_split:
-        hidden_backup = self._hide_passwords(self._backup_visible_json)
+      if is_split and self.backup_editor.text != hidden_backup:
         self.backup_editor.text = hidden_backup
         self.backup_editor.readonly = True
 
     else:
-      self.editor.text = self._primary_visible_json
+      if self.editor.text != self._primary_visible_json:
+        self.editor.text = self._primary_visible_json
+
       self.editor.readonly = False
 
-      if is_split:
+      if is_split and self.backup_editor.text != self._backup_visible_json:
         self.backup_editor.text = self._backup_visible_json
         self.backup_editor.readonly = False
 
   # --------------------------------------------------------------------------------------
 
-  def _hide_passwords(self, json_str: str) -> str:
+  def _mask_passwords(self, json_str: str) -> str:
     """Заменить все значения password на ***."""
 
     return re.sub(r'("password"\s*:\s*)"[^"]*"', r'\1"***"', json_str)
@@ -366,7 +378,7 @@ class VaultScreen(Screen):
   def _on_editor_text(self) -> None:
     """При изменении текста в show-режиме - обновить _primary_visible_json."""
 
-    if not self._password_hidden:
+    if not self._passwords_masked:
       self._primary_visible_json = self.editor.text
 
   # --------------------------------------------------------------------------------------
@@ -374,7 +386,7 @@ class VaultScreen(Screen):
   def _on_backup_editor_text(self) -> None:
     """При изменении текста backup в show-режиме - обновить _backup_visible_json."""
 
-    if not self._password_hidden:
+    if not self._passwords_masked:
       self._backup_visible_json = self.backup_editor.text
 
   # MARK: state
@@ -392,7 +404,7 @@ class VaultScreen(Screen):
         self.toolbar.add_enabled = False
         self.editor.readonly = True
 
-        self._hide_backup_editor()
+        self._collapse_backup_editor()
 
       case VaultState.LOADING:
         self.toolbar.download_enabled = False
@@ -405,7 +417,7 @@ class VaultScreen(Screen):
         self.toolbar.upload_enabled = True
         self.toolbar.add_enabled = True
 
-        self._hide_backup_editor()
+        self._collapse_backup_editor()
         self._apply_hide_state()
 
       case VaultState.SPLIT:

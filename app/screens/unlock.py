@@ -7,9 +7,10 @@ from typing import TYPE_CHECKING, cast
 
 from kivy.app import App
 from kivy.lang import Builder
-from kivy.properties import ListProperty, ObjectProperty
+from kivy.properties import ObjectProperty
 from kivy.uix.screenmanager import Screen
 
+from app.screens.mixins import ErrorScreenMixin
 from app.services.vault_ops import download_primary
 from app.utils import resource_path
 from cesar_len_pass_vault.sync import YaConnectionError
@@ -20,30 +21,26 @@ if TYPE_CHECKING:
   from main import CesarVaultApp
 
 
-# --------------------------------------------------------------------------------------
+# ----------------------------------------------------------------------------------------
 
 Builder.load_file(resource_path("app/screens/unlock.kv"))
 
-# --------------------------------------------------------------------------------------
+# ----------------------------------------------------------------------------------------
 
 
-class UnlockScreen(Screen):
+class UnlockScreen(Screen, ErrorScreenMixin):
   """
   Экран ввода мастер-пароля.
   """
 
   password_input = ObjectProperty(None)
-  error_label = ObjectProperty(None)
-  _bg_color = ListProperty([0, 0, 0, 1])  # Чёрный по умолчанию
 
   # --------------------------------------------------------------------------------------
 
   def on_enter(self, *args: object) -> None:
     self.password_input.text = ""
-    self.error_label.text = ""
-    self.error_label.opacity = 0
-    self._bg_color = [0, 0, 0, 1]  # Сброс фона к чёрному
     self.password_input.focus = True
+    self._clear_error()
 
     cast("CesarVaultApp", App.get_running_app()).master_password = ""
 
@@ -84,13 +81,3 @@ class UnlockScreen(Screen):
 
     except Exception as e:
       self._set_error(f"Error: {e}")
-
-  # MARK: private
-  # --------------------------------------------------------------------------------------
-
-  def _set_error(self, error_text: str) -> None:
-    """Включить красный фон ошибки с текстом."""
-
-    self._bg_color = [0.4, 0.05, 0.05, 1]  # Бледно-красный
-    self.error_label.opacity = 1
-    self.error_label.text = error_text

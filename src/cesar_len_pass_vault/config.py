@@ -17,12 +17,12 @@ from cesar_len_pass_vault._constants import ITERATIONS, ROUNDS, SALT_SIZE
 from cesar_len_pass_vault.cipher_settings import decrypt_setting, encrypt_setting
 
 
-# --------------------------------------------------------------------------------------
+# ----------------------------------------------------------------------------------------
 
 if not is_android_platform():
   load_dotenv()
 
-# --------------------------------------------------------------------------------------
+# ----------------------------------------------------------------------------------------
 
 
 @dataclass
@@ -33,7 +33,7 @@ class PasswordGeneratorConfig:
   use_special: bool = True
 
 
-# --------------------------------------------------------------------------------------
+# ----------------------------------------------------------------------------------------
 
 
 class CesarVaultConfig:
@@ -51,7 +51,7 @@ class CesarVaultConfig:
   # Генератор паролей (defaults, не сохраняются)
   password_gen: PasswordGeneratorConfig = PasswordGeneratorConfig()
 
-  # --------------------------------------------------------------------------
+  # --------------------------------------------------------------------------------------
 
   def __init__(self) -> None:
     """
@@ -66,7 +66,7 @@ class CesarVaultConfig:
     self.YA_TOKEN = os.getenv("YA_TOKEN", "")
     self.REMOTE_PATH = os.getenv("REMOTE_PATH", "")
 
-  # --------------------------------------------------------------------------
+  # --------------------------------------------------------------------------------------
 
   @property
   def BACKUP_REMOTE_PATH(self) -> str:
@@ -84,7 +84,7 @@ class CesarVaultConfig:
 
     return self.REMOTE_PATH + ".backup" if self.REMOTE_PATH else ""
 
-  # --------------------------------------------------------------------------
+  # --------------------------------------------------------------------------------------
 
   def save_settings(self, ya_token: str, remote_path: str) -> None:
     """
@@ -101,46 +101,57 @@ class CesarVaultConfig:
     os.environ["YA_TOKEN"] = ya_token
     os.environ["REMOTE_PATH"] = remote_path
 
-    # Определяем платформу и пишем в соответствующий файл
     if is_android_platform():
-      from android.storage import app_storage_path  # type: ignore  # noqa: PLC0415
-
-      # Android: settings.json
-      settings_path = Path(app_storage_path()) / "settings.json"
-      settings_path.parent.mkdir(parents=True, exist_ok=True)
-
-      with open(settings_path, "w", encoding="utf-8") as f:
-        json.dump(
-          {
-            "YA_TOKEN": encrypt_setting(ya_token),
-            "REMOTE_PATH": remote_path,
-            "SALT_SIZE": self.SALT_SIZE,
-            "ITERATIONS": self.ITERATIONS,
-            "ROUNDS": self.ROUNDS,
-          },
-          f,
-          ensure_ascii=False,
-          indent=2,
-        )
+      self._save_android_settings(ya_token, remote_path)
 
     else:
-      # Desktop: .env
-      env_path = Path.cwd() / ".env"
-
-      with open(env_path, "w", encoding="utf-8") as f:
-        f.write("# Yandex Disk authentication\n")
-        f.write(f"YA_TOKEN={ya_token}\n")
-        f.write("\n")
-        f.write("# Crypto settings\n")
-        f.write(f"SALT_SIZE={self.SALT_SIZE}\n")
-        f.write(f"ITERATIONS={self.ITERATIONS}\n")
-        f.write(f"ROUNDS={self.ROUNDS}\n")
-        f.write("\n")
-        f.write("# Yandex Disk paths\n")
-        f.write(f"REMOTE_PATH={remote_path}\n")
+      self._save_desktop_settings(ya_token, remote_path)
 
   # MARK: private
-  # --------------------------------------------------------------------------
+  # --------------------------------------------------------------------------------------
+
+  def _save_android_settings(self, ya_token: str, remote_path: str) -> None:
+    """Сохранить настройки в settings.json (Android)."""
+
+    from android.storage import app_storage_path  # type: ignore  # noqa: PLC0415
+
+    settings_path = Path(app_storage_path()) / "settings.json"
+    settings_path.parent.mkdir(parents=True, exist_ok=True)
+
+    with open(settings_path, "w", encoding="utf-8") as f:
+      json.dump(
+        {
+          "YA_TOKEN": encrypt_setting(ya_token),
+          "REMOTE_PATH": remote_path,
+          "SALT_SIZE": self.SALT_SIZE,
+          "ITERATIONS": self.ITERATIONS,
+          "ROUNDS": self.ROUNDS,
+        },
+        f,
+        ensure_ascii=False,
+        indent=2,
+      )
+
+  # --------------------------------------------------------------------------------------
+
+  def _save_desktop_settings(self, ya_token: str, remote_path: str) -> None:
+    """Сохранить настройки в .env (desktop)."""
+
+    env_path = Path.cwd() / ".env"
+
+    with open(env_path, "w", encoding="utf-8") as f:
+      f.write("# Yandex Disk authentication\n")
+      f.write(f"YA_TOKEN={ya_token}\n")
+      f.write("\n")
+      f.write("# Crypto settings\n")
+      f.write(f"SALT_SIZE={self.SALT_SIZE}\n")
+      f.write(f"ITERATIONS={self.ITERATIONS}\n")
+      f.write(f"ROUNDS={self.ROUNDS}\n")
+      f.write("\n")
+      f.write("# Yandex Disk paths\n")
+      f.write(f"REMOTE_PATH={remote_path}\n")
+
+  # --------------------------------------------------------------------------------------
 
   def _load_android_settings(self) -> None:
     """
@@ -191,14 +202,14 @@ class CesarVaultConfig:
     return Path.cwd()
 
 
-# --------------------------------------------------------------------------------------
+# ----------------------------------------------------------------------------------------
 
 
 # Экземпляр конфигурации для удобного импорта
 config = CesarVaultConfig()
 
 
-# --------------------------------------------------------------------------------------
+# ----------------------------------------------------------------------------------------
 
 
 def is_configured() -> bool:

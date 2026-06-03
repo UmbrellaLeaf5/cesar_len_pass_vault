@@ -9,7 +9,7 @@ from cesar_len_pass_vault.sync import download, upload
 
 
 # MARK: download
-# --------------------------------------------------------------------------------------
+# ----------------------------------------------------------------------------------------
 
 
 def download_primary(password: str) -> tuple[str, int]:
@@ -36,7 +36,7 @@ def download_primary(password: str) -> tuple[str, int]:
 
 
 # MARK: backup
-# --------------------------------------------------------------------------------------
+# ----------------------------------------------------------------------------------------
 
 
 def download_backup(password: str) -> tuple[str, int]:
@@ -64,7 +64,7 @@ def download_backup(password: str) -> tuple[str, int]:
 
 
 # MARK: upload
-# --------------------------------------------------------------------------------------
+# ----------------------------------------------------------------------------------------
 
 
 def upload_vault(primary_vault: Vault, backup_vault: Vault, password: str) -> None:

@@ -29,7 +29,7 @@ from cesar_len_pass_vault.exceptions import DecryptionError
 
 
 # MARK: encrypt
-# --------------------------------------------------------------------------------------
+# ----------------------------------------------------------------------------------------
 
 
 def encrypt_vault_backup(vault_json: str, master_password: str) -> bytes:
@@ -53,7 +53,7 @@ def encrypt_vault_backup(vault_json: str, master_password: str) -> bytes:
   return header + body
 
 
-# --------------------------------------------------------------------------------------
+# ----------------------------------------------------------------------------------------
 
 
 def _encrypt_text(text: str, key: bytes, rounds: int = ROUNDS) -> str:
@@ -87,7 +87,7 @@ def _encrypt_text(text: str, key: bytes, rounds: int = ROUNDS) -> str:
 
 
 # MARK: decrypt
-# --------------------------------------------------------------------------------------
+# ----------------------------------------------------------------------------------------
 
 
 def decrypt_vault_backup(encrypted_blob: bytes, master_password: str) -> str:
@@ -119,7 +119,7 @@ def decrypt_vault_backup(encrypted_blob: bytes, master_password: str) -> str:
   return _decrypt_text(cipher_text, stretched_key)
 
 
-# --------------------------------------------------------------------------------------
+# ----------------------------------------------------------------------------------------
 
 
 def _decrypt_text(cipher_text: str, key: bytes, rounds: int = ROUNDS) -> str:
@@ -148,7 +148,7 @@ def _decrypt_text(cipher_text: str, key: bytes, rounds: int = ROUNDS) -> str:
 
 
 # MARK: private
-# --------------------------------------------------------------------------------------
+# ----------------------------------------------------------------------------------------
 
 
 def _subkey(parent_key: bytes, round_num: int) -> str:
@@ -164,7 +164,7 @@ def _subkey(parent_key: bytes, round_num: int) -> str:
   return hmac.new(parent_key, data, hashlib.sha256).hexdigest()
 
 
-# --------------------------------------------------------------------------------------
+# ----------------------------------------------------------------------------------------
 
 
 def _compute_shift(subkey: str, position: int, alph_len: int) -> int:
@@ -195,7 +195,7 @@ def _compute_shift(subkey: str, position: int, alph_len: int) -> int:
   return shift if shift != 0 else 1
 
 
-# --------------------------------------------------------------------------------------
+# ----------------------------------------------------------------------------------------
 
 
 def _caesar_shift(char: str, shift: int, alph: str, decrypt: bool = False) -> str:
