@@ -13,6 +13,7 @@ from kivy.uix.screenmanager import Screen
 from app.screens.mixins import ErrorScreenMixin
 from app.services.vault_ops import download_primary
 from app.utils import resource_path
+from cesar_len_pass_vault.exceptions import DecryptionError
 from cesar_len_pass_vault.sync import YaConnectionError
 
 
@@ -75,7 +76,7 @@ class UnlockScreen(Screen, ErrorScreenMixin):
       vault_screen.preloaded_text = ""
       self.manager.current = "vault"
 
-    except json.JSONDecodeError:
+    except (json.JSONDecodeError, DecryptionError):
       self._set_error("Invalid master password")
 
     except YaConnectionError as e:

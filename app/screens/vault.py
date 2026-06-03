@@ -155,7 +155,7 @@ class VaultScreen(Screen):
 
     Returns:
       (primary_vault, backup_vault, is_split).
-      Если ошибка — (None, None, False), статус уже выставлен.
+      Если ошибка - (None, None, False), статус уже выставлен.
     """
 
     primary_json = self._primary_visible_json.strip()
@@ -321,7 +321,7 @@ class VaultScreen(Screen):
   # --------------------------------------------------------------------------------------
 
   def _on_add_entry_dismissed(self, was_masked: bool) -> None:
-    """После закрытия попапа добавить записи - обновить _visible_json."""
+    """После закрытия попапа добавить записи - обновить _primary/_backup_visible_json."""
 
     if self._state == VaultState.SPLIT:
       self._backup_visible_json = self.backup_editor.text
@@ -329,7 +329,7 @@ class VaultScreen(Screen):
       self._primary_visible_json = self.editor.text
 
     if was_masked:
-      self._apply_hide_state()
+      self._toggle_passwords()
 
   # --------------------------------------------------------------------------------------
 
@@ -394,7 +394,7 @@ class VaultScreen(Screen):
   def _on_backup_editor_text(self) -> None:
     """При изменении текста backup в show-режиме - обновить _backup_visible_json."""
 
-    if not self._passwords_masked:
+    if not self._passwords_masked and self._state == VaultState.SPLIT:
       self._backup_visible_json = self.backup_editor.text
 
   # MARK: state

@@ -120,6 +120,7 @@ def test_wrong_password_fails_json() -> None:
     json.loads(result)
     # Крайне маловероятно, но возможно: garbage = valid JSON
     # В этом случае тест считается пройденным - это приемлемый риск
+
   except (json.JSONDecodeError, UnicodeDecodeError, DecryptionError):
     # Ожидаемое поведение
     pass
@@ -165,6 +166,7 @@ def test_wrong_magic_raises() -> None:
   try:
     decrypt_vault_backup(header + body, "pw")
     raise AssertionError("Должно было вызвать исключение")
+
   except ValueError:
     pass
 

@@ -123,7 +123,9 @@ class AddEntryPopup(Popup):
   # MARK: private
   # --------------------------------------------------------------------------------------
 
-  def _on_key_down(self, window, key, scancode, codepoint, modifiers) -> bool:
+  def _on_key_down(
+    self, window, key: int, scancode: int, codepoint: str, modifiers: list[str]
+  ) -> bool:
     """ESC = отмена."""
 
     if key == Keyboard.keycodes["escape"]:

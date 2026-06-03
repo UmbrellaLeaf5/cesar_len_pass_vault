@@ -51,7 +51,12 @@ class SetupScreen(Screen, ErrorScreenMixin):
       return
 
     # Сохраняем настройки
-    config.save_settings(token, path)
+    try:
+      config.save_settings(token, path)
+
+    except Exception as e:
+      self._set_error(f"Failed to save settings: {e}")
+      return
 
     # Переходим к UnlockScreen
     self.manager.current = "unlock"

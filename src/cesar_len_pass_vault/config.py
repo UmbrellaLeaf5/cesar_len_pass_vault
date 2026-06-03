@@ -59,6 +59,7 @@ class CesarVaultConfig:
 
     На Android пытается загрузить из settings.json, если .env не найден.
     """
+
     # Пытаемся загрузить с Android-хранилища если .env пуст
     if not os.getenv("YA_TOKEN") or not os.getenv("REMOTE_PATH"):
       self._load_android_settings()
@@ -161,6 +162,7 @@ class CesarVaultConfig:
     """
 
     settings_path = self._env_path() / "settings.json"
+
     if not settings_path.exists():
       return
 
@@ -170,11 +172,14 @@ class CesarVaultConfig:
 
       if "YA_TOKEN" in settings:
         token = settings["YA_TOKEN"]
+
         if ":" in token:
           try:
             token = decrypt_setting(token)
-          except Exception:
+
+          except (ValueError, UnicodeDecodeError):
             pass  # fallback к plaintext
+
         os.environ["YA_TOKEN"] = token
 
       if "REMOTE_PATH" in settings:
