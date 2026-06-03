@@ -1,5 +1,30 @@
 import os
+import secrets
+import string
 import sys
+
+
+# --------------------------------------------------------------------------------------
+
+
+def generate_password(length: int = 20, use_special: bool = True) -> str:
+  """
+  Генерирует криптографически безопасный случайный пароль.
+
+  Args:
+    length: длина пароля
+    use_special: включать ли спецсимволы
+
+  Returns:
+    Сгенерированный пароль
+  """
+
+  chars = string.ascii_letters + string.digits
+
+  if use_special:
+    chars += "!@#$%^&*()-_=+"
+
+  return "".join(secrets.choice(chars) for _ in range(length))
 
 
 # --------------------------------------------------------------------------------------

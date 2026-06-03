@@ -4,13 +4,15 @@
 
 import json
 
+from kivy.core.clipboard import Clipboard
 from kivy.core.window import Keyboard, Window
 from kivy.lang import Builder
 from kivy.properties import ObjectProperty
 from kivy.uix.popup import Popup
 
-from app.utils import resource_path
+from app.utils import generate_password, resource_path
 from cesar_len_pass_vault import PasswordEntry
+from cesar_len_pass_vault.config import config
 
 
 # --------------------------------------------------------------------------------------
@@ -104,6 +106,19 @@ class AddEntryPopup(Popup):
     self.target_editor.text = json.dumps(data, ensure_ascii=False, indent=2)
 
     self.dismiss()
+
+  # --------------------------------------------------------------------------------------
+
+  def generate_password(self) -> None:
+    """Сгенерировать случайный пароль, вставить в поле и скопировать в буфер."""
+
+    pwd = generate_password(
+      length=config.password_gen.length,
+      use_special=config.password_gen.use_special,
+    )
+
+    self.password_input.text = pwd
+    Clipboard.copy(pwd)
 
   # MARK: private
   # --------------------------------------------------------------------------

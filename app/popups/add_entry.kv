@@ -74,14 +74,26 @@
         size_hint_y: None
         height: '20dp'
 
-      CustomTextInput:
-        id: password_input
-        password: True
-        multiline: False
+      BoxLayout:
+        spacing: '4dp'
         size_hint_y: None
         height: '40dp'
-        write_tab: False
-        background_color: 0.1, 0.1, 0.1, 1
+
+        CustomTextInput:
+          id: password_input
+          password: True
+          multiline: False
+          size_hint_y: None
+          height: '40dp'
+          write_tab: False
+          background_color: 0.1, 0.1, 0.1, 1
+
+        CustomButton:
+          text: "Gen"
+          width: '56dp'
+          size_hint_x: None
+          font_size: '14sp'
+          on_release: root.generate_password()
 
       CustomLabel:
         text: "Notes"

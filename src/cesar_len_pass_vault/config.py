@@ -7,6 +7,7 @@
 
 import json
 import os
+from dataclasses import dataclass
 from pathlib import Path
 
 from dotenv import load_dotenv
@@ -24,6 +25,17 @@ if not is_android_platform():
 # --------------------------------------------------------------------------------------
 
 
+@dataclass
+class PasswordGeneratorConfig:
+  """Настройки генератора паролей (не сохраняются между запусками)."""
+
+  length: int = 20
+  use_special: bool = True
+
+
+# --------------------------------------------------------------------------------------
+
+
 class CesarVaultConfig:
   """
   Конфигурация приложения.
@@ -35,6 +47,9 @@ class CesarVaultConfig:
   SALT_SIZE: int = SALT_SIZE
   ITERATIONS: int = ITERATIONS
   ROUNDS: int = ROUNDS
+
+  # Генератор паролей (defaults, не сохраняются)
+  password_gen: PasswordGeneratorConfig = PasswordGeneratorConfig()
 
   # --------------------------------------------------------------------------
 
