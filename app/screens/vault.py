@@ -50,14 +50,15 @@ class VaultScreen(Screen):
   preloaded_text: str = ""
   _state: VaultState = VaultState.EMPTY
 
-  _visible_json: str = ""
+  _primary_visible_json: str = ""
+  _backup_visible_json: str = ""
   _password_hidden: bool = True
 
   # --------------------------------------------------------------------------------------
 
   def on_enter(self, *args: object) -> None:
     if self.preloaded_text:
-      self.editor.text = self.preloaded_text
+      self._primary_visible_json = self.preloaded_text
       vault = json_to_vault(self.preloaded_text)
 
       self.status_label.text = (
@@ -88,8 +89,7 @@ class VaultScreen(Screen):
 
     try:
       primary_json_str, amount = download_primary(self._get_password())
-      self._visible_json = primary_json_str
-      self._apply_hide_state()
+      self._primary_visible_json = primary_json_str
 
       self._hide_backup_editor()
       self._update_ui_by_state(VaultState.LOADED)
@@ -124,8 +124,7 @@ class VaultScreen(Screen):
 
     try:
       backup_json_str, count = download_backup(self._get_password())
-      self._visible_json = backup_json_str
-      self._apply_hide_state()
+      self._backup_visible_json = backup_json_str
 
       # Показываем split: основной редактор остаётся, backup справа
       self._update_ui_by_state(VaultState.SPLIT)
@@ -166,7 +165,7 @@ class VaultScreen(Screen):
   def _do_upload(self) -> None:
     """Зашифровать содержимое редактора и загрузить на Яндекс.Диск."""
 
-    primary_json = self._visible_json.strip()
+    primary_json = self._primary_visible_json.strip()
 
     if not primary_json:
       self.status_label.text = "Nothing to upload: editor is empty"
@@ -186,7 +185,7 @@ class VaultScreen(Screen):
     backup_vault: Vault | None = None
 
     if is_split:
-      backup_json = self._visible_json.strip()
+      backup_json = self._backup_visible_json.strip()
 
       if not backup_json:
         self.status_label.text = "Backup editor is empty"
@@ -214,12 +213,13 @@ class VaultScreen(Screen):
         pw,
       )
 
-      # Обновляем _visible_json отсортированным JSON
-      self._visible_json = vault_to_json(primary_vault)
-      self._apply_hide_state()
+      # Обновляем оба visible JSON отсортированным контентом
+      self._primary_visible_json = vault_to_json(primary_vault)
 
       if is_split and backup_vault is not None:
-        self.backup_editor.text = self.editor.text
+        self._backup_visible_json = vault_to_json(backup_vault)
+
+      self._apply_hide_state()
 
       self.status_label.text = (
         f"Saved {datetime.now().strftime('%H:%M')} - {len(primary_vault.entries)} entries"
@@ -279,10 +279,10 @@ class VaultScreen(Screen):
     """Синхронизировать редакторы по выбору пользователя и загрузить."""
 
     if choice == "primary":
-      self.backup_editor.text = self.editor.text
+      self._backup_visible_json = self._primary_visible_json
 
     elif choice == "backup":
-      self.editor.text = self.backup_editor.text
+      self._primary_visible_json = self._backup_visible_json
 
     self._do_upload()
 
@@ -312,11 +312,12 @@ class VaultScreen(Screen):
   def _on_add_entry_dismissed(self, was_hidden: bool) -> None:
     """После закрытия попапа добавить записи - обновить _visible_json."""
 
-    if not was_hidden:
-      self._visible_json = self.editor.text
-
+    if self._state == VaultState.SPLIT:
+      self._backup_visible_json = self.backup_editor.text
     else:
-      self._visible_json = self.editor.text
+      self._primary_visible_json = self.editor.text
+
+    if was_hidden:
       self._apply_hide_state()
 
   # --------------------------------------------------------------------------------------
@@ -333,22 +334,24 @@ class VaultScreen(Screen):
     """Применить текущее состояние _password_hidden к редакторам."""
 
     self.hide_button.text = "Show" if self._password_hidden else "Hide"
+    is_split = self._state == VaultState.SPLIT
 
     if self._password_hidden:
-      hidden = self._hide_passwords(self._visible_json)
-      self.editor.text = hidden
+      hidden_primary = self._hide_passwords(self._primary_visible_json)
+      self.editor.text = hidden_primary
       self.editor.readonly = True
 
-      if self._state == VaultState.SPLIT:
-        self.backup_editor.text = hidden
+      if is_split:
+        hidden_backup = self._hide_passwords(self._backup_visible_json)
+        self.backup_editor.text = hidden_backup
         self.backup_editor.readonly = True
 
     else:
-      self.editor.text = self._visible_json
+      self.editor.text = self._primary_visible_json
       self.editor.readonly = False
 
-      if self._state == VaultState.SPLIT:
-        self.backup_editor.text = self._visible_json
+      if is_split:
+        self.backup_editor.text = self._backup_visible_json
         self.backup_editor.readonly = False
 
   # --------------------------------------------------------------------------------------
@@ -361,10 +364,18 @@ class VaultScreen(Screen):
   # --------------------------------------------------------------------------------------
 
   def _on_editor_text(self) -> None:
-    """При изменении текста в show-режиме - обновить _visible_json."""
+    """При изменении текста в show-режиме - обновить _primary_visible_json."""
 
     if not self._password_hidden:
-      self._visible_json = self.editor.text
+      self._primary_visible_json = self.editor.text
+
+  # --------------------------------------------------------------------------------------
+
+  def _on_backup_editor_text(self) -> None:
+    """При изменении текста backup в show-режиме - обновить _backup_visible_json."""
+
+    if not self._password_hidden:
+      self._backup_visible_json = self.backup_editor.text
 
   # MARK: state
   # --------------------------------------------------------------------------------------
