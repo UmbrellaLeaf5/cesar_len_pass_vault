@@ -28,65 +28,44 @@ Both versions share the same master password but derive keys differently. They a
 
 The primary cipher (`cesar_len_key`) is fast and compact. The backup cipher is deliberately over‑engineered - multiple rounds, derived subkeys, forbidden zero‑shifts - specifically to avoid the floating‑point pitfalls that could cause the primary cipher to produce different output on different hardware.
 
-## How it works - user experience
+## How it works
 
-### 0. First launch - setup
+### First launch
 
-On the very first launch (or when `.env` is missing) the app opens the **Setup** screen. Enter your **Yandex.Disk OAuth token** and the **remote path** where the vault should live, then press **Save & Continue**. The app writes the settings and proceeds to the Unlock screen.
+Enter your Yandex.Disk OAuth token and vault path on the **Setup** screen. Settings are saved to `.env` (desktop) or encrypted `settings.json` (Android). Subsequent launches skip this step.
 
-- **Desktop:** settings saved to `.env` in the working directory.
-- **Android:** settings saved to `settings.json` in the app's private storage (`/data/data/<package>/files/settings.json`). The `YA_TOKEN` is encrypted with a Caesar cipher + SHA‑256 key stretching (format: `salt:encrypted_token`).
+### Unlock & editor
 
-On subsequent launches the Setup screen is skipped - your credentials are reused from `.env` (desktop) or decrypted from `settings.json` (Android).
+Type your master password - the vault is downloaded, decrypted, and displayed as formatted JSON. By default all passwords are masked (`***`) and the editor is locked. Press **Show** to reveal and edit, **Hide** to mask again.
 
-### 1. Unlock
+### Toolbar
 
-The app opens to a dark unlock screen with a single password field. Type your master password and press **Unlock** (or Enter).
+**Download** | **Upload** | **+ Entry** | **Show**/**Hide** | **\*** | **Backup**. Buttons enable/disable based on the current state:
 
-Behind the scenes the app immediately reaches Yandex.Disk, downloads the encrypted vault, and tries to decrypt it with the password you just entered. If the password is correct, you land on the main editor screen with your data already displayed - no extra clicks needed.
+| State                             | Download | Upload | + Entry | Show/Hide | \*  | Backup |
+| --------------------------------- | -------- | ------ | ------- | --------- | --- | ------ |
+| **Empty** — nothing loaded        | +        | -      | -       | -         | +   | -      |
+| **Loaded** — primary vault shown  | +        | +      | +       | +         | +   | +      |
+| **Loading** — network in progress | -        | -      | -       | -         | +   | -      |
+| **Split** — two editors visible   | +        | +      | +       | +         | +   | +      |
 
-If the password is **wrong**, the screen background turns pale red and a message says "Invalid master password". You can retry immediately.
+**\*** opens the settings menu. **Backup** downloads the backup vault for split‑mode comparison.
 
-### 2. Main editor
+### Adding entries
 
-Once unlocked you see:
+**+ Entry** opens a popup (Service, Login, Password, Notes). A **Gen** button next to Password generates a 20‑char secure random password and copies it to clipboard. **+ Entry** auto‑switches to Show mode, then back to Hide after saving. On **Upload**, entries are auto‑sorted alphabetically by `service`.
 
-- A **toolbar** at the top with four buttons: **Download**, **Upload**, **+ Entry**, and a **settings gear** (⋆).
-- A full‑screen **text editor** showing your vault as formatted JSON.
-- A **status bar** at the bottom with timestamps and entry counts.
+### Split mode
 
-The toolbar adapts to the current state:
+Download the backup vault via the settings gear - two editors side‑by‑side. If they differ on Upload, a popup asks which version to keep. Both are then synced and sorted.
 
-| State                               | Download | Upload | + Entry |
-| ----------------------------------- | -------- | ------ | ------- |
-| **Empty** - nothing loaded yet      | +        | -      | -       |
-| **Loaded** - primary vault is shown | +        | +      | +       |
-| **Loading** - network in progress   | -        | -      | -       |
-| **Split** - two editors visible     | +        | +      | +       |
+### Error recovery
 
-### 3. Adding and uploading entries
+Network failures return the editor to **Empty** - only Download remains active. Retry at any time.
 
-Press **+ Entry** to open a popup with four fields: **Service**, **Login**, **Password**, and **Notes**. Fill in at least Service and Login, then press **Save**. The entry is appended as a JSON object to the editor. Press **Upload** to push the updated vault to the cloud.
+### Token protection (Android)
 
-On **Upload** all entries are automatically sorted alphabetically by `service` (case‑insensitive). Both the primary and backup vaults are sorted, and the editor text is updated to reflect the sorted order.
-
-### 4. Split mode - comparing ciphers
-
-The vault is encrypted **twice** with different algorithms (see [Dual encryption](#dual-encryption) below). Normally you only see the primary version. Press the **gear icon** and choose **Download Backup** to load the backup version alongside the primary one - two editors side by side.
-
-This is useful when the primary cipher fails to decode correctly (e.g. due to floating‑point quirks on a different CPU). You can inspect both versions and pick the one you trust.
-
-In split mode **+ Entry** adds to the right (backup) editor. On **Upload** the app checks whether the two editors differ. If they do, a popup asks which version to keep - then **both** cloud files are synchronised with the same chosen content (and sorted alphabetically by `service`).
-
-### 5. Error recovery
-
-If a network call fails, the editor drops back to the **Empty** state: a blank JSON editor with only the **Download** button active. You can retry at any time.
-
-### 6. Token protection (Android)
-
-On Android the Yandex.Disk OAuth token is encrypted before being written to `settings.json`. The encryption uses a multi‑round Caesar cipher with SHA‑256 key stretching derived from the app's hardcoded secret - the same algorithm that protects the backup vault.
-
-The stored token format is `salt:encrypted_token` (base64). Older plaintext tokens are still accepted (backward compatibility).
+On Android the `YA_TOKEN` is encrypted in `settings.json` using a multi‑round Caesar cipher with SHA‑256 key stretching - the same algorithm that protects the backup vault. Format: `salt:encrypted_token` (base64). Older plaintext tokens are still accepted.
 
 ## State machine
 
@@ -94,14 +73,14 @@ The vault screen behaves as a deterministic state machine driven by the `VaultSt
 
 ```
          ┌──────────────┐
-         │    EMPTY     │  download / upload disabled except Download
+         │    EMPTY     │  only Download active
          │              │  editor: readonly, empty
          └──────┬───────┘
                 │ download (primary)
                 │
          ┌──────▼───────┐
-  ┌──────│    LOADED    │  all operations enabled
-  │      │              │  editor: editable, primary vault shown
+  ┌──────│    LOADED    │  all buttons active
+  │      │              │  editor: passwords masked by default, Show to edit
   │      └──────┬───────┘
   │             │ download (backup)
   │             │
@@ -114,15 +93,13 @@ The vault screen behaves as a deterministic state machine driven by the `VaultSt
   │             │ add entry - appends to backup editor
   │             │
   │      ┌──────▼───────┐
-  │      │   LOADING    │  all buttons disabled while network
-  │      │              │  operation is in progress
+  │      │   LOADING    │  all buttons disabled during
+  │      │              │  network operation
   │      └──────┬───────┘
   │             │ success → LOADED or SPLIT
   │             │ error → EMPTY
   └─────────────┘
 ```
-
-Every transition goes through a single method (`_update_ui_by_state`) that updates toolbar availability, editor read‑only flag, and split‑editor visibility in one atomic step.
 
 ## Quick start
 
