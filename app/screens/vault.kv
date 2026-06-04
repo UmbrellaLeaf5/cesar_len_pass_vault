@@ -8,7 +8,6 @@
   status_label: status_label
   toolbar: toolbar
   hide_button: hide_button
-  copy_button: copy_button
 
   BoxLayout:
     orientation: "vertical"
@@ -53,15 +52,6 @@
           disabled: not toolbar.add_enabled
           opacity: 1 if toolbar.add_enabled else 0.4
           on_release: root._toggle_passwords()
-
-        CustomButton:
-          id: copy_button
-          text: "Copy"
-          width: "56dp"
-          size_hint_x: None
-          disabled: not toolbar.add_enabled or root._passwords_masked
-          opacity: 1 if (toolbar.add_enabled and not root._passwords_masked) else 0.4
-          on_release: root.copy_selection()
 
         CustomButton:
           text: "*"
