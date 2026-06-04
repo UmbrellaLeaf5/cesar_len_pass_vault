@@ -488,27 +488,6 @@ def download_primary(password: str) -> tuple[Vault, int]:
 
 ---
 
-## Сравнение primary ↔ backup при загрузке
-
-**Что сделать:** при скачивании backup сравнивать его с primary и показывать различия в статус-баре. Если vault идентичны — показать ненавязчивое уведомление, а не просто перейти в split без комментария.
-
-**Как работает (обновлено под Vault-объекты):**
-
-- Метод `_compare_vaults()` сравнивает два `Vault` объекта: строит `dict[service, PasswordEntry]` и сравнивает поля
-- При загрузке backup (`_download_backup`) сразу после получения данных вызывается сравнение
-- Если идентичны: статус "Backup matches primary — no differences"
-- Если есть различия: статус "Backup differs: <service>: password differs; <service>: missing in backup" (до 3 различий)
-
-**Реализация:**
-
-- Новый метод `_compare_vaults() -> tuple[bool, list[str]]` в `vault.py`
-- Вызов в `_download_backup()` после получения `self._backup_vault`
-- Только Python-код, без UI-попапов, без `.kv`
-
-**Сложность:** низкая — ~30 строк в `vault.py`
-
----
-
 ## Смена мастер-пароля
 
 **Что сделать:**
