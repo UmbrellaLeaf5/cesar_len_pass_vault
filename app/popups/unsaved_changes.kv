@@ -1,0 +1,37 @@
+#:kivy 2.3
+
+<UnsavedChangesPopup>:
+  title: ""
+  size_hint: 0.65, 0.3
+  auto_dismiss: False
+
+  BoxLayout:
+    orientation: "vertical"
+    padding: '16dp'
+    spacing: '12dp'
+
+    Label:
+      text: "You have unsaved changes.\nSave before closing?"
+      halign: "center"
+      font_size: '16sp'
+      color: 1.0, 1.0, 1.0, 1
+
+    BoxLayout:
+      size_hint_y: None
+      height: '48dp'
+      spacing: '12dp'
+
+      CustomButton:
+        text: "Save & Close"
+        background_color: 0.2, 0.5, 0.8, 1
+        on_release: root.save_and_close()
+
+      CustomButton:
+        text: "Discard"
+        background_color: 0.8, 0.3, 0.3, 1
+        on_release: root.discard_and_close()
+
+      CustomButton:
+        text: "Cancel"
+        background_color: 0.4, 0.4, 0.4, 1
+        on_release: root.dismiss()

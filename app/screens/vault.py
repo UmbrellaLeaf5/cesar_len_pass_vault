@@ -8,6 +8,7 @@ from datetime import datetime
 from typing import TYPE_CHECKING, cast
 
 from kivy.app import App
+from kivy.core.window import Window
 from kivy.lang import Builder
 from kivy.properties import ObjectProperty
 from kivy.uix.screenmanager import Screen
@@ -21,6 +22,7 @@ if TYPE_CHECKING:
 from app.popups.add_entry import AddEntryPopup
 from app.popups.settings import SettingsPopup
 from app.popups.sync import SyncPopup
+from app.popups.unsaved_changes import UnsavedChangesPopup
 from app.services.vault_ops import download_backup, download_primary, upload_vault
 from cesar_len_pass_vault import json_to_vault, vault_to_json
 from cesar_len_pass_vault.enums import VaultState
@@ -54,13 +56,28 @@ class VaultScreen(Screen):
 
   _primary_visible_json: str = ""
   _backup_visible_json: str = ""
+  _last_saved_primary_json: str = ""
+  _last_saved_backup_json: str = ""
   _passwords_masked: bool = True
+  _unsaved_popup: UnsavedChangesPopup | None = None
+
+  # --------------------------------------------------------------------------------------
+
+  @property
+  def _has_unsaved_changes(self) -> bool:
+    """True если _visible_json отличается от последнего сохранённого."""
+
+    return (
+      self._primary_visible_json != self._last_saved_primary_json
+      or self._backup_visible_json != self._last_saved_backup_json
+    )
 
   # --------------------------------------------------------------------------------------
 
   def on_enter(self, *args: object) -> None:
     if self.preloaded_text:
       self._primary_visible_json = self.preloaded_text
+      self._last_saved_primary_json = self.preloaded_text
       vault = json_to_vault(self.preloaded_text)
 
       self.status_label.text = (
@@ -75,6 +92,8 @@ class VaultScreen(Screen):
       self.editor.text = ""
       self.status_label.text = ""
 
+    Window.bind(on_request_close=self._on_request_close)
+
   # MARK: download
   # --------------------------------------------------------------------------------------
 
@@ -87,6 +106,7 @@ class VaultScreen(Screen):
     try:
       primary_json_str, amount = download_primary(self._get_password())
       self._primary_visible_json = primary_json_str
+      self._last_saved_primary_json = primary_json_str
 
       self._collapse_backup_editor()
       self._update_ui_by_state(VaultState.LOADED)
@@ -225,6 +245,9 @@ class VaultScreen(Screen):
       else:
         self._backup_visible_json = self._primary_visible_json
 
+      self._last_saved_primary_json = self._primary_visible_json
+      self._last_saved_backup_json = self._backup_visible_json
+
       self.status_label.text = (
         f"Saved {datetime.now().strftime('%H:%M')} - {len(primary_vault.entries)} entries"
       )
@@ -313,7 +336,7 @@ class VaultScreen(Screen):
     if not diffs:
       return "Backup matches primary - no differences"
 
-    if len(diffs) <= 3:
+    if len(diffs) <= 3:  # noqa: PLR2004
       return "Backup differs: " + "; ".join(diffs)
 
     shown = diffs[:3]
@@ -346,6 +369,46 @@ class VaultScreen(Screen):
       self.status_label.text = f"Error: {error}"
 
     self._update_ui_by_state(VaultState.EMPTY)
+
+  # --------------------------------------------------------------------------------------
+
+  def _on_request_close(self, *args: object) -> bool:
+    """Перехват закрытия окна — проверить несохранённые изменения."""
+
+    if self._has_unsaved_changes:
+      self._unsaved_popup = UnsavedChangesPopup()
+      self._unsaved_popup.on_save_close = self._save_and_close
+      self._unsaved_popup.on_discard = self._discard_and_close
+      self._unsaved_popup.open()
+
+      return True
+
+    return False
+
+  # --------------------------------------------------------------------------------------
+
+  def _save_and_close(self) -> None:
+    """Сохранить изменения и закрыть приложение."""
+
+    self._unsaved_popup = None
+    before = self._last_saved_primary_json
+    self._do_upload()
+
+    if self._last_saved_primary_json != before:
+      app = App.get_running_app()
+      assert app is not None
+      app.stop()
+
+  # --------------------------------------------------------------------------------------
+
+  def _discard_and_close(self) -> None:
+    """Закрыть без сохранения."""
+
+    self._unsaved_popup = None
+
+    app = App.get_running_app()
+    assert app is not None
+    app.stop()
 
   # --------------------------------------------------------------------------------------
 
