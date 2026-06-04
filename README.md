@@ -40,16 +40,16 @@ Type your master password - the vault is downloaded, decrypted, and displayed as
 
 ### Toolbar
 
-**Download** | **Upload** | **+ Entry** | **Show**/**Hide** | **Copy** | **\***. Buttons enable/disable based on the current state:
+**Download** | **Upload** | **+ Entry** | **Show**/**Hide** | **\***. Buttons enable/disable based on the current state:
 
-| State                             | Download | Upload | + Entry | Show/Hide | Copy | \*  |
-| --------------------------------- | -------- | ------ | ------- | --------- | ---- | --- |
-| **Empty** - nothing loaded        | +        | -      | -       | -         | -    | +   |
-| **Loaded** - primary vault shown  | +        | +      | +       | +         | +¹   | +   |
-| **Loading** - network in progress | -        | -      | -       | -         | -    | +   |
-| **Split** - two editors visible   | +        | +      | +       | +         | +¹   | +   |
+| State                             | Download | Upload | + Entry | Show/Hide | \*  |
+| --------------------------------- | -------- | ------ | ------- | --------- | --- |
+| **Empty** - nothing loaded        | +        | -      | -       | -         | +   |
+| **Loaded** - primary vault shown  | +        | +      | +       | +         | +   |
+| **Loading** - network in progress | -        | -      | -       | -         | +   |
+| **Split** - two editors visible   | +        | +      | +       | +         | +   |
 
-**\*** opens the settings menu. **Backup** downloads the backup vault for split‑mode comparison. **Copy** ¹ copies selected text from the active editor to clipboard - active only in Show mode.
+**\*** opens the settings menu. **Backup** downloads the backup vault for split‑mode comparison.
 
 ### Adding entries
 
@@ -57,7 +57,7 @@ Type your master password - the vault is downloaded, decrypted, and displayed as
 
 ### Split mode
 
-Download the backup vault via the settings gear - two editors side‑by‑side. If they differ on Upload, a popup asks which version to keep. Both are then synced and sorted.
+Download the backup vault via the settings gear - two editors side‑by‑side (primary left, backup right). On download, the backup is automatically compared to the primary: the status bar shows matching services, differing fields, and missing entries. If they differ on Upload, a popup asks which version to keep. Both are then synced and sorted.
 
 ### Error recovery
 

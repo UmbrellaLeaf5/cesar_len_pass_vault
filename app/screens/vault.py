@@ -313,7 +313,7 @@ class VaultScreen(Screen):
     if not diffs:
       return "Backup matches primary - no differences"
 
-    if len(diffs) <= 3:  # noqa: PLR2004
+    if len(diffs) <= 3:
       return "Backup differs: " + "; ".join(diffs)
 
     shown = diffs[:3]
