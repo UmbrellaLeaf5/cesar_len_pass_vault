@@ -6,6 +6,7 @@ import json
 from typing import TYPE_CHECKING, cast
 
 from kivy.app import App
+from kivy.clock import Clock
 from kivy.lang import Builder
 from kivy.properties import ObjectProperty
 from kivy.uix.screenmanager import Screen
@@ -37,6 +38,9 @@ class UnlockScreen(Screen, ErrorScreenMixin):
   """
 
   password_input = ObjectProperty(None)
+  unlock_button = ObjectProperty(None)
+
+  _failed_attempts: int = 0
 
   # --------------------------------------------------------------------------------------
 
@@ -44,6 +48,7 @@ class UnlockScreen(Screen, ErrorScreenMixin):
     self.password_input.text = ""
     self.password_input.focus = True
     self._clear_error()
+    self._failed_attempts = 0
 
     cast("CesarVaultApp", App.get_running_app()).master_password = ""
 
@@ -51,6 +56,9 @@ class UnlockScreen(Screen, ErrorScreenMixin):
 
   def unlock(self) -> None:
     """Обработчик нажатия кнопки Unlock."""
+
+    if self.password_input.readonly:
+      return
 
     password = self.password_input.text.strip()
 
@@ -66,21 +74,39 @@ class UnlockScreen(Screen, ErrorScreenMixin):
       primary_json_str, _ = download_primary(password)
 
       # Успех - передаём данные на VaultScreen
+      self._failed_attempts = 0
       vault_screen = cast("VaultScreen", self.manager.get_screen("vault"))
       vault_screen.preloaded_text = primary_json_str
       self.manager.current = "vault"
 
     except FileNotFoundError:
       # Хранилище ещё не создано - переходим с пустым редактором
+      self._failed_attempts = 0
       vault_screen = cast("VaultScreen", self.manager.get_screen("vault"))
       vault_screen.preloaded_text = ""
       self.manager.current = "vault"
 
     except (json.JSONDecodeError, DecryptionError):
-      self._set_error("Invalid master password")
+      delay = min(2**self._failed_attempts, 16)
+      self._failed_attempts += 1
+      self._set_error(f"Invalid master password - wait {delay}s")
+      self.password_input.readonly = True
+      self.unlock_button.disabled = True
+      Clock.schedule_once(self._enable_unlock, delay)
 
     except YaConnectionError as e:
       self._set_error(f"Connection error: {e}")
 
     except Exception as e:
       self._set_error(f"Error: {e}")
+
+  # MARK: private
+  # --------------------------------------------------------------------------------------
+
+  def _enable_unlock(self, dt: float) -> None:
+    """Разблокировать ввод после задержки."""
+
+    self.password_input.readonly = False
+    self.unlock_button.disabled = False
+    self.password_input.text = ""
+    self.password_input.focus = True
