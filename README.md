@@ -36,20 +36,20 @@ Enter your Yandex.Disk OAuth token and vault path on the **Setup** screen. Setti
 
 ### Unlock & editor
 
-Type your master password - the vault is downloaded, decrypted, and displayed as formatted JSON. By default all passwords are masked (`***`) and the editor is locked. Press **Show** to reveal and edit, **Hide** to mask again.
+Type your master password - the vault is downloaded, decrypted, and displayed as formatted JSON. By default all passwords are masked (`***`) and the editor is locked. Press **Show** to reveal and edit, **Hide** to mask again. Wrong passwords trigger an exponential delay (1s → 2s → 4s → 8s → 16s cap) to prevent brute‑force attacks.
 
 ### Toolbar
 
-**Download** | **Upload** | **+ Entry** | **Show**/**Hide** | **\*** | **Backup**. Buttons enable/disable based on the current state:
+**Download** | **Upload** | **+ Entry** | **Show**/**Hide** | **Copy** | **\***. Buttons enable/disable based on the current state:
 
-| State                             | Download | Upload | + Entry | Show/Hide | \*  | Backup |
-| --------------------------------- | -------- | ------ | ------- | --------- | --- | ------ |
-| **Empty** - nothing loaded        | +        | -      | -       | -         | +   | -      |
-| **Loaded** - primary vault shown  | +        | +      | +       | +         | +   | +      |
-| **Loading** - network in progress | -        | -      | -       | -         | +   | -      |
-| **Split** - two editors visible   | +        | +      | +       | +         | +   | +      |
+| State                             | Download | Upload | + Entry | Show/Hide | Copy | \*  |
+| --------------------------------- | -------- | ------ | ------- | --------- | ---- | --- |
+| **Empty** - nothing loaded        | +        | -      | -       | -         | -    | +   |
+| **Loaded** - primary vault shown  | +        | +      | +       | +         | +¹   | +   |
+| **Loading** - network in progress | -        | -      | -       | -         | -    | +   |
+| **Split** - two editors visible   | +        | +      | +       | +         | +¹   | +   |
 
-**\*** opens the settings menu. **Backup** downloads the backup vault for split‑mode comparison.
+**\*** opens the settings menu. **Backup** downloads the backup vault for split‑mode comparison. **Copy** ¹ copies selected text from the active editor to clipboard - active only in Show mode.
 
 ### Adding entries
 
