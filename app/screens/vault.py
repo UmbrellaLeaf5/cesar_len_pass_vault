@@ -134,56 +134,6 @@ class VaultScreen(Screen):
     except (YaConnectionError, Exception) as e:
       self._handle_error(e)
 
-  # MARK: private
-  # --------------------------------------------------------------------------------------
-
-  def _compare_vaults(self, primary_json: str, backup_json: str) -> str:
-    """Сравнить primary и backup, вернуть сообщение для статус-бара."""
-
-    primary_data = json.loads(primary_json)
-    backup_data = json.loads(backup_json)
-
-    primary_map: dict[str, dict] = {}
-    for e in primary_data.get("entries", []):
-      primary_map[e["service"].casefold()] = e
-
-    backup_map: dict[str, dict] = {}
-    for e in backup_data.get("entries", []):
-      backup_map[e["service"].casefold()] = e
-
-    diffs: list[str] = []
-
-    for svc_key, p_entry in primary_map.items():
-      b_entry = backup_map.get(svc_key)
-
-      if b_entry is None:
-        diffs.append(f"{p_entry['service']}: missing in backup")
-        continue
-
-      differing_fields: list[str] = []
-
-      for field in ("login", "password", "notes"):
-        if p_entry.get(field) != b_entry.get(field):
-          differing_fields.append(field)
-
-      if differing_fields:
-        diffs.append(f"{p_entry['service']}: {', '.join(differing_fields)}")
-
-    for svc_key, b_entry in backup_map.items():
-      if svc_key not in primary_map:
-        diffs.append(f"{b_entry['service']}: missing in primary")
-
-    if not diffs:
-      return "Backup matches primary — no differences"
-
-    if len(diffs) <= 3:
-      return "Backup differs: " + "; ".join(diffs)
-
-    shown = diffs[:3]
-    remaining = len(diffs) - 3
-
-    return f"Backup differs: {'; '.join(shown)}; +{remaining} more"
-
   # MARK: upload
   # --------------------------------------------------------------------------------------
 
@@ -322,6 +272,55 @@ class VaultScreen(Screen):
     popup.open()
 
   # MARK: private
+  # --------------------------------------------------------------------------------------
+
+  def _compare_vaults(self, primary_json: str, backup_json: str) -> str:
+    """Сравнить primary и backup, вернуть сообщение для статус-бара."""
+
+    primary_data = json.loads(primary_json)
+    backup_data = json.loads(backup_json)
+
+    primary_map: dict[str, dict] = {}
+    for e in primary_data.get("entries", []):
+      primary_map[e["service"].casefold()] = e
+
+    backup_map: dict[str, dict] = {}
+    for e in backup_data.get("entries", []):
+      backup_map[e["service"].casefold()] = e
+
+    diffs: list[str] = []
+
+    for svc_key, p_entry in primary_map.items():
+      b_entry = backup_map.get(svc_key)
+
+      if b_entry is None:
+        diffs.append(f"{p_entry['service']}: missing in backup")
+        continue
+
+      differing_fields: list[str] = []
+
+      for field in ("login", "password", "notes"):
+        if p_entry.get(field) != b_entry.get(field):
+          differing_fields.append(field)
+
+      if differing_fields:
+        diffs.append(f"{p_entry['service']}: {', '.join(differing_fields)}")
+
+    for svc_key, b_entry in backup_map.items():
+      if svc_key not in primary_map:
+        diffs.append(f"{b_entry['service']}: missing in primary")
+
+    if not diffs:
+      return "Backup matches primary - no differences"
+
+    if len(diffs) <= 3:  # noqa: PLR2004
+      return "Backup differs: " + "; ".join(diffs)
+
+    shown = diffs[:3]
+    remaining = len(diffs) - 3
+
+    return f"Backup differs: {'; '.join(shown)}; +{remaining} more"
+
   # --------------------------------------------------------------------------------------
 
   def _handle_sync_choice(self, choice: str) -> None:

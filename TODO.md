@@ -2,7 +2,7 @@
 
 ## Список записей вместо голого JSON
 
-**Суть:** заменить TextInput с JSON на RecycleView с отформатированным списком записей. Редактирование — через попап по тапу на элемент. Сохранить raw JSON как read-only toggle.
+**Суть:** заменить TextInput с JSON на RecycleView с отформатированным списком записей. Редактирование - через попап по тапу на элемент. Сохранить raw JSON как read-only toggle.
 
 ### Поток данных (новый)
 
@@ -15,17 +15,17 @@ upload   ← Vault ←── json_to_vault(editor.text) ← Raw-режим (ес
 
 ### Новые файлы
 
-#### `app/popups/edit_entry.py` + `edit_entry.kv` — EditEntryPopup
+#### `app/popups/edit_entry.py` + `edit_entry.kv` - EditEntryPopup
 
-- Поля: `service`, `login`, `password`, `notes` — предзаполнены из существующей записи
-- Кнопка **Show**/**Hide** рядом с password — per-entry show/hide (текст, не смайлик)
+- Поля: `service`, `login`, `password`, `notes` - предзаполнены из существующей записи
+- Кнопка **Show**/**Hide** рядом с password - per-entry show/hide (текст, не смайлик)
 - Кнопки внизу: **OK** (закрыть без изменений), **Save** (обновить запись в Vault), **Delete** (красная, удалить запись)
-- Gen **нет** — только в AddEntryPopup
+- Gen **нет** - только в AddEntryPopup
 - Свойства:
-  - `entry_index: int` — индекс записи в `Vault.entries`
-  - `entry: PasswordEntry` — копия записи для редактирования
-  - `on_save: ObjectProperty` — callback `(index: int, entry: PasswordEntry) -> None`
-  - `on_delete: ObjectProperty` — callback `(index: int) -> None`
+  - `entry_index: int` - индекс записи в `Vault.entries`
+  - `entry: PasswordEntry` - копия записи для редактирования
+  - `on_save: ObjectProperty` - callback `(index: int, entry: PasswordEntry) -> None`
+  - `on_delete: ObjectProperty` - callback `(index: int) -> None`
 - `on_open()`: предзаполнить поля, сбросить ошибки, пароль в masked-режиме
 - `save()`: валидация (service+login не пустые), вызвать `on_save`, закрыть
 - `delete_entry()`: подтверждение? или сразу `on_delete` + закрыть
@@ -34,12 +34,12 @@ upload   ← Vault ←── json_to_vault(editor.text) ← Raw-режим (ес
 
 ### Изменяемые файлы
 
-#### 1. `app/screens/vault.kv` — два режима: список ↔ raw JSON
+#### 1. `app/screens/vault.kv` - два режима: список ↔ raw JSON
 
 **Режим списка** (по умолчанию):
 
 - `RecycleView` с `viewclass: VaultEntryItem` внутри ScrollView
-- Поверх `RecycleView` — `ScrollView` для скролла (как сейчас)
+- Поверх `RecycleView` - `ScrollView` для скролла (как сейчас)
 - Каждый item (`VaultEntryItem`): горизонтальный BoxLayout
   - `Label`: `service` (жирный, `text_size` с обрезкой)
   - `Label`: `›` (серая стрелка справа, индикатор что можно нажать)
@@ -114,16 +114,16 @@ VaultEntryItem:
 - Raw-режим: два ScrollView+TextInput как сейчас
 - Размеры: `size_hint_x: 0.5` каждому, скрытие backup через `size_hint_x: 0, opacity: 0`
 
-#### 2. `app/screens/vault.py` — замена JSON-строк на Vault-объекты
+#### 2. `app/screens/vault.py` - замена JSON-строк на Vault-объекты
 
 **Свойства (удалить):**
 
-- `_primary_visible_json` — заменить на `_primary_vault: Vault`
-- `_backup_visible_json` — заменить на `_backup_vault: Vault`
-- `_passwords_masked` — удалить (show/hide per-entry)
-- `hide_button` — удалить
-- `copy_button` — удалить
-- `preloaded_text: str` — заменить на `preloaded_vault: Vault | None`
+- `_primary_visible_json` - заменить на `_primary_vault: Vault`
+- `_backup_visible_json` - заменить на `_backup_vault: Vault`
+- `_passwords_masked` - удалить (show/hide per-entry)
+- `hide_button` - удалить
+- `copy_button` - удалить
+- `preloaded_text: str` - заменить на `preloaded_vault: Vault | None`
 
 **Свойства (добавить):**
 
@@ -131,17 +131,17 @@ VaultEntryItem:
 - `_backup_vault: Vault = Vault()`
 - `_raw_mode: bool = False`
 - `raw_button = ObjectProperty(None)`
-- `primary_list: RecycleView` (в split — `backup_list` тоже)
+- `primary_list: RecycleView` (в split - `backup_list` тоже)
 
 **Методы (удалить):**
 
-- `_mask_passwords()` — не нужен, пароли не показываются в списке
-- `_apply_hide_state()` — не нужен
-- `_toggle_passwords()` — не нужен
-- `_on_editor_text()` — не нужен
-- `_on_backup_editor_text()` — не нужен
-- `_validate_editor_json()` — не нужен (валидация в попапах)
-- `copy_selection()` — уже удалён
+- `_mask_passwords()` - не нужен, пароли не показываются в списке
+- `_apply_hide_state()` - не нужен
+- `_toggle_passwords()` - не нужен
+- `_on_editor_text()` - не нужен
+- `_on_backup_editor_text()` - не нужен
+- `_validate_editor_json()` - не нужен (валидация в попапах)
+- `copy_selection()` - уже удалён
 
 **Методы (изменить):**
 
@@ -279,7 +279,7 @@ def _toggle_raw(self):
         self._refresh_list()
 ```
 
-На самом деле проще — в `.kv` сделать два контейнера с `opacity: 0/1`:
+На самом деле проще - в `.kv` сделать два контейнера с `opacity: 0/1`:
 
 ```
 BoxLayout:
@@ -303,7 +303,7 @@ BoxLayout:
 
 И переключать `opacity` + `disabled` у контейнеров.
 
-В split-режиме — два набора контейнеров:
+В split-режиме - два набора контейнеров:
 
 ```
 BoxLayout:
@@ -399,7 +399,7 @@ def _handle_sync_choice(self, choice):
 - EMPTY: скрыть backup, очистить list data
 - LOADING: без изменений
 
-#### 3. `app/services/vault_ops.py` — возвращать Vault
+#### 3. `app/services/vault_ops.py` - возвращать Vault
 
 `download_primary(password) -> tuple[Vault, int]`:
 
@@ -416,21 +416,21 @@ def download_primary(password: str) -> tuple[Vault, int]:
 Аналогично.
 
 `upload_vault(primary_vault, backup_vault, password)`:
-Без изменений — уже принимает Vault.
+Без изменений - уже принимает Vault.
 
-#### 4. `app/popups/add_entry.py` — callback вместо target_editor
+#### 4. `app/popups/add_entry.py` - callback вместо target_editor
 
 - Убрать `target_editor = ObjectProperty(None)`
 - Убрать логику `json.loads(current_json)`, `data.setdefault(...)`, `json.dumps(..., indent=2)`
 - Убрать `self.target_editor.text = json.dumps(...)`
-- Добавить `on_entry_added = ObjectProperty(None)` — callback `(entry: PasswordEntry) -> None`
+- Добавить `on_entry_added = ObjectProperty(None)` - callback `(entry: PasswordEntry) -> None`
 - `save()`:
   1. Валидация service + login не пустые
   2. Создать `PasswordEntry(service=..., login=..., password=..., notes=...)`
   3. Вызвать `self.on_entry_added(entry)`
   4. Закрыть попап
 
-#### 5. `app/screens/unlock.py` — передавать Vault
+#### 5. `app/screens/unlock.py` - передавать Vault
 
 - `vault_screen.preloaded_vault = vault` (вместо `preloaded_text = json_str`)
 - `vault_screen.preloaded_vault = None` (вместо `preloaded_text = ""` для FileNotFoundError)
@@ -439,10 +439,10 @@ def download_primary(password: str) -> tuple[Vault, int]:
 ### Что остаётся без изменений
 
 - Тулбар: Download, Upload, +Entry, \* (Settings)
-- State machine (EMPTY/LOADED/LOADING/SPLIT) — логика та же, обновляется только UI
+- State machine (EMPTY/LOADED/LOADING/SPLIT) - логика та же, обновляется только UI
 - SettingsPopup, SyncPopup
-- Encryption/decryption (pack_vault, unpack_vault) — без изменений
-- Авто-сортировка на upload — без изменений (в `upload_vault`)
+- Encryption/decryption (pack_vault, unpack_vault) - без изменений
+- Авто-сортировка на upload - без изменений (в `upload_vault`)
 
 ### Что уходит
 
@@ -455,36 +455,36 @@ def download_primary(password: str) -> tuple[Vault, int]:
 
 ### Порядок реализации
 
-1. `edit_entry.py` + `edit_entry.kv` — новый попап
-2. `vault_ops.py` — возвращать Vault
-3. `vault.py` — замена \_visible_json на \_vault, новый \_refresh_list, \_edit_entry, \_on_entry_saved/deleted/added
-4. `vault.kv` — RecycleView + raw-контейнеры
-5. `add_entry.py` — callback вместо target_editor
-6. `unlock.py` — preloaded_vault
+1. `edit_entry.py` + `edit_entry.kv` - новый попап
+2. `vault_ops.py` - возвращать Vault
+3. `vault.py` - замена \_visible_json на \_vault, новый \_refresh_list, \_edit_entry, \_on_entry_saved/deleted/added
+4. `vault.kv` - RecycleView + raw-контейнеры
+5. `add_entry.py` - callback вместо target_editor
+6. `unlock.py` - preloaded_vault
 
 ### Риски
 
 - **RecycleView** в Kivy требует `viewclass` и правильной структуры `data`. Надо протестировать, что тапы работают внутри ScrollView + RecycleView на Android.
 - **Split-режим**: нужно чётко различать, из какого списка (primary/backup) пришёл тап, чтобы редактировать правильный Vault.
-- **Raw-режим**: при переключении raw → список нужно парсить JSON — возможны ошибки, надо показывать статус и не давать переключиться при битом JSON.
-- **Обратная совместимость**: preloaded_text меняется на preloaded_vault — нужно проверить unlock flow.
+- **Raw-режим**: при переключении raw → список нужно парсить JSON - возможны ошибки, надо показывать статус и не давать переключиться при битом JSON.
+- **Обратная совместимость**: preloaded_text меняется на preloaded_vault - нужно проверить unlock flow.
 
-**Сложность:** высокая — ~200 строк .py, ~100 строк .kv, затрагивает 5+ файлов.
+**Сложность:** высокая - ~200 строк .py, ~100 строк .kv, затрагивает 5+ файлов.
 
 ---
 
 ## Поиск по сервисам (обновлено под список)
 
-**Что сделать:** над списком записей — однострочное поле поиска. При вводе текста фильтруются записи в RecycleView по полю `service` (case-insensitive). При пустом поле — показываются все записи.
+**Что сделать:** над списком записей - однострочное поле поиска. При вводе текста фильтруются записи в RecycleView по полю `service` (case-insensitive). При пустом поле - показываются все записи.
 
 **Реализация:**
 
 - `CustomTextInput` с `multiline: False` над RecycleView в `vault.kv`
-- Метод `_filter_services(text: str)` в `vault.py` — фильтрует `data` списка по `service`
+- Метод `_filter_services(text: str)` в `vault.py` - фильтрует `data` списка по `service`
 - Срабатывает на `on_text` поискового поля
-- В split-режиме — фильтр применяется к обоим спискам
+- В split-режиме - фильтр применяется к обоим спискам
 
-**Сложность:** низкая — ~10 строк Python + 1 TextInput в `.kv`
+**Сложность:** низкая - ~10 строк Python + 1 TextInput в `.kv`
 
 ---
 
@@ -509,6 +509,6 @@ def download_primary(password: str) -> tuple[Vault, int]:
 **Сложность:** средняя-высокая
 
 - Нужно корректно обработать оба хранилища (primary + backup)
-- Риск потери данных при ошибке — нужна транзакционность (сначала загрузить новое, потом старое)
+- Риск потери данных при ошибке - нужна транзакционность (сначала загрузить новое, потом старое)
 - Обновить `app.master_password` после успешной смены
 - Обработка ошибок сети и неверного текущего пароля
