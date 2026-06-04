@@ -4,20 +4,6 @@
 
 A Kivy-based GUI password vault. Stores encrypted JSON on Yandex Disk with dual encryption: primary via `cesar_len_key.CryptedLines`, backup via a custom multi-round Caesar cipher with SHA-256 key stretching.
 
-## Setup
-
-```bash
-uv sync                # installs dependencies and creates .venv
-```
-
-Copy `.env.example` to `.env` and fill in:
-
-```
-YA_TOKEN=<your Yandex Disk OAuth token>
-REMOTE_PATH=/Приложения/cesar-len-key/vault.enc
-BACKUP_REMOTE_PATH=/Приложения/cesar-len-key/vault_backup.enc
-```
-
 ## Run
 
 ```bash
@@ -47,29 +33,6 @@ ruff check --fix . && ruff format .
 
 ```bash
 uv run pytest tests/test_file.py::test_name -v
-```
-
-## State machine (VaultState)
-
-```python
-class VaultState(Enum):
-    EMPTY   = "empty"    # no vault loaded, download enabled
-    LOADED  = "loaded"   # primary vault loaded, all operations enabled
-    LOADING = "loading"  # network operation in progress, all disabled
-    SPLIT   = "split"    # two editors side-by-side (primary + backup)
-```
-
-Transitions:
-
-```
-EMPTY  → (download primary) → LOADED
-EMPTY  → (download backup)  → SPLIT   (left editor empty)
-LOADED → (download backup)  → SPLIT
-SPLIT  → (download primary) → LOADED  (exit split)
-SPLIT  → (upload)           → SPLIT   (saves both versions)
-EMPTY  → (upload)           → LOADED
-LOADED → (upload)           → LOADED
-Any    → (connection error) → EMPTY
 ```
 
 ## Code style
