@@ -367,6 +367,7 @@ class VaultScreen(Screen):
         self.editor.text = self._primary_visible_json
 
       self.editor.readonly = False
+      self.editor.focus = True
 
       if is_split:
         if self.backup_editor.text != self._backup_visible_json:
