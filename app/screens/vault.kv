@@ -3,6 +3,8 @@
 <VaultScreen>:
   editor: editor
   backup_editor: backup_editor
+  primary_scroll: primary_scroll
+  backup_scroll: backup_scroll
   status_label: status_label
   toolbar: toolbar
   hide_button: hide_button
@@ -61,25 +63,39 @@
     BoxLayout:
       orientation: "horizontal"
 
-      CustomTextInput:
-        id: editor
-        text: ""
-        background_color: 0.1, 0.1, 0.1, 1
-        foreground_color: 1.0, 1.0, 1.0, 1
-        scroll_distance: '20dp'
-        scroll_timeout: 250
-        on_text: root._on_editor_text()
+      ScrollView:
+        id: primary_scroll
+        do_scroll_x: False
+        bar_width: '4dp'
+        scroll_distance: '10dp'
+        scroll_timeout: 150
 
-      CustomTextInput:
-        id: backup_editor
-        text: ""
-        background_color: 0.1, 0.1, 0.1, 1
-        foreground_color: 1.0, 1.0, 1.0, 1
-        scroll_distance: '20dp'
-        scroll_timeout: 250
+        CustomTextInput:
+          id: editor
+          text: ""
+          size_hint_y: None
+          height: max(self.minimum_height, self.parent.height)
+          background_color: 0.1, 0.1, 0.1, 1
+          foreground_color: 1.0, 1.0, 1.0, 1
+          on_text: root._on_editor_text()
+
+      ScrollView:
+        id: backup_scroll
+        do_scroll_x: False
+        bar_width: '4dp'
+        scroll_distance: '10dp'
+        scroll_timeout: 150
         size_hint_x: 0
         opacity: 0
-        on_text: root._on_backup_editor_text()
+
+        CustomTextInput:
+          id: backup_editor
+          text: ""
+          size_hint_y: None
+          height: max(self.minimum_height, self.parent.height)
+          background_color: 0.1, 0.1, 0.1, 1
+          foreground_color: 1.0, 1.0, 1.0, 1
+          on_text: root._on_backup_editor_text()
 
     CustomLabel:
       id: status_label

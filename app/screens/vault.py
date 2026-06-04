@@ -43,6 +43,8 @@ class VaultScreen(Screen):
 
   editor = ObjectProperty(None)
   backup_editor = ObjectProperty(None)
+  primary_scroll = ObjectProperty(None)
+  backup_scroll = ObjectProperty(None)
   status_label = ObjectProperty(None)
   toolbar = ObjectProperty(None)
   hide_button = ObjectProperty(None)
@@ -312,11 +314,11 @@ class VaultScreen(Screen):
     """Скрыть backup редактор (возврат к одному редактору)."""
 
     self.backup_editor.text = ""
-    self.backup_editor.size_hint_x = 0
-    self.backup_editor.opacity = 0
+    self.backup_scroll.size_hint_x = 0
+    self.backup_scroll.opacity = 0
     self.backup_editor.readonly = True
 
-    self.editor.size_hint_x = 1
+    self.primary_scroll.size_hint_x = 1
 
   # --------------------------------------------------------------------------------------
 
@@ -413,6 +415,7 @@ class VaultScreen(Screen):
         self.toolbar.add_enabled = False
         self.editor.readonly = True
 
+        self.primary_scroll.size_hint_x = 1
         self._collapse_backup_editor()
 
       case VaultState.LOADING:
@@ -420,6 +423,8 @@ class VaultScreen(Screen):
         self.toolbar.upload_enabled = False
         self.toolbar.add_enabled = False
         self.editor.readonly = True
+
+        self.primary_scroll.size_hint_x = 1
 
       case VaultState.LOADED:
         self.toolbar.download_enabled = True
@@ -434,8 +439,8 @@ class VaultScreen(Screen):
         self.toolbar.upload_enabled = True
         self.toolbar.add_enabled = True
 
-        self.editor.size_hint_x = 0.5
-        self.backup_editor.size_hint_x = 0.5
-        self.backup_editor.opacity = 1
+        self.primary_scroll.size_hint_x = 0.5
+        self.backup_scroll.size_hint_x = 0.5
+        self.backup_scroll.opacity = 1
 
         self._apply_hide_state()
