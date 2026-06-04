@@ -44,10 +44,10 @@ Type your master password - the vault is downloaded, decrypted, and displayed as
 
 | State                             | Download | Upload | + Entry | Show/Hide | \*  | Backup |
 | --------------------------------- | -------- | ------ | ------- | --------- | --- | ------ |
-| **Empty** — nothing loaded        | +        | -      | -       | -         | +   | -      |
-| **Loaded** — primary vault shown  | +        | +      | +       | +         | +   | +      |
-| **Loading** — network in progress | -        | -      | -       | -         | +   | -      |
-| **Split** — two editors visible   | +        | +      | +       | +         | +   | +      |
+| **Empty** - nothing loaded        | +        | -      | -       | -         | +   | -      |
+| **Loaded** - primary vault shown  | +        | +      | +       | +         | +   | +      |
+| **Loading** - network in progress | -        | -      | -       | -         | +   | -      |
+| **Split** - two editors visible   | +        | +      | +       | +         | +   | +      |
 
 **\*** opens the settings menu. **Backup** downloads the backup vault for split‑mode comparison.
 
