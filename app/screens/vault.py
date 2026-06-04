@@ -48,6 +48,7 @@ class VaultScreen(Screen):
   status_label = ObjectProperty(None)
   toolbar = ObjectProperty(None)
   hide_button = ObjectProperty(None)
+  copy_button = ObjectProperty(None)
 
   preloaded_text: str = ""
   _state: VaultState = VaultState.EMPTY
@@ -234,6 +235,18 @@ class VaultScreen(Screen):
 
     except (YaConnectionError, Exception) as e:
       self._handle_error(e)
+
+  # --------------------------------------------------------------------------------------
+
+  def copy_selection(self) -> None:
+    """Копировать выделенный текст из активного редактора в буфер."""
+
+    target = (
+      self.backup_editor
+      if self._state == VaultState.SPLIT and self.backup_editor.focus
+      else self.editor
+    )
+    target.copy()
 
   # MARK: popup
   # --------------------------------------------------------------------------------------
