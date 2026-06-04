@@ -3,7 +3,6 @@
 """
 
 import json
-import re
 from datetime import datetime
 from typing import TYPE_CHECKING, cast
 
@@ -13,23 +12,21 @@ from kivy.lang import Builder
 from kivy.properties import ObjectProperty
 from kivy.uix.screenmanager import Screen
 
-from app.utils import resource_path
-
-
-if TYPE_CHECKING:
-  from main import CesarVaultApp
-
 from app.popups.add_entry import AddEntryPopup
 from app.popups.settings import SettingsPopup
 from app.popups.sync import SyncPopup
 from app.popups.unsaved_changes import UnsavedChangesPopup
 from app.services.vault_ops import download_backup, download_primary, upload_vault
+from app.utils import resource_path
 from cesar_len_pass_vault import json_to_vault, vault_to_json
 from cesar_len_pass_vault.enums import VaultState
 from cesar_len_pass_vault.exceptions import DecryptionError
 from cesar_len_pass_vault.models import Vault
 from cesar_len_pass_vault.sync import YaConnectionError
 
+
+if TYPE_CHECKING:
+  from main import CesarVaultApp
 
 # ----------------------------------------------------------------------------------------
 
@@ -59,26 +56,34 @@ class VaultScreen(Screen):
   _last_saved_primary_json: str = ""
   _last_saved_backup_json: str = ""
   _passwords_masked: bool = True
+
   _unsaved_popup: UnsavedChangesPopup | None = None
 
-  # --------------------------------------------------------------------------------------
-
-  @property
-  def _has_unsaved_changes(self) -> bool:
-    """True если _visible_json отличается от последнего сохранённого."""
-
-    return (
-      self._primary_visible_json != self._last_saved_primary_json
-      or self._backup_visible_json != self._last_saved_backup_json
-    )
+  _FULL_WIDTH: float = 1.0
+  _HALF_WIDTH: float = 0.5
+  _HIDDEN: float = 0.0
+  _MAX_DIFFS_SHOWN: int = 3
 
   # --------------------------------------------------------------------------------------
 
   def on_enter(self, *args: object) -> None:
+    Window.unbind(on_request_close=self._on_request_close)
+
     if self.preloaded_text:
       self._primary_visible_json = self.preloaded_text
       self._last_saved_primary_json = self.preloaded_text
-      vault = json_to_vault(self.preloaded_text)
+
+      try:
+        vault = json_to_vault(self.preloaded_text)
+
+      except json.JSONDecodeError:
+        self._update_ui_by_state(VaultState.EMPTY)
+        self.editor.text = ""
+        self.status_label.text = "Failed to parse vault data"
+        self.preloaded_text = ""
+        Window.bind(on_request_close=self._on_request_close)
+
+        return
 
       self.status_label.text = (
         f"Loaded {datetime.now().strftime('%H:%M')} - {len(vault.entries)} entries"
@@ -144,7 +149,8 @@ class VaultScreen(Screen):
       self.status_label.text = comparison
 
     except FileNotFoundError:
-      self._update_ui_by_state(VaultState.EMPTY)
+      self._collapse_backup_editor()
+      self._update_ui_by_state(VaultState.LOADED)
       self.status_label.text = "Backup vault not found"
 
     except (json.JSONDecodeError, DecryptionError):
@@ -179,42 +185,45 @@ class VaultScreen(Screen):
       Если ошибка - (None, None, False), статус уже выставлен.
     """
 
-    primary_json = self._primary_visible_json.strip()
+    primary_vault = self._parse_vault_from_json(self._primary_visible_json, "editor")
 
-    if not primary_json:
-      self.status_label.text = "Nothing to upload: editor is empty"
-
-      return None, None, False
-
-    try:
-      primary_vault = json_to_vault(primary_json)
-
-    except json.JSONDecodeError as e:
-      self.status_label.text = f"JSON error: line {e.lineno}, column {e.colno}"
-
+    if primary_vault is None:
       return None, None, False
 
     is_split = self._state == VaultState.SPLIT
     backup_vault: Vault | None = None
 
     if is_split:
-      backup_json = self._backup_visible_json.strip()
+      backup_vault = self._parse_vault_from_json(
+        self._backup_visible_json, "Backup editor"
+      )
 
-      if not backup_json:
-        self.status_label.text = "Backup editor is empty"
-        return None, None, False
-
-      try:
-        backup_vault = json_to_vault(backup_json)
-
-      except json.JSONDecodeError as e:
-        self.status_label.text = (
-          f"JSON error in backup: line {e.lineno}, column {e.colno}"
-        )
-
+      if backup_vault is None:
         return None, None, False
 
     return primary_vault, backup_vault, is_split
+
+  # --------------------------------------------------------------------------------------
+
+  def _parse_vault_from_json(self, json_str: str, label: str) -> Vault | None:
+    """Распарсить JSON-строку в Vault с сообщением об ошибке в status_label."""
+
+    text = json_str.strip()
+
+    if not text:
+      self.status_label.text = f"{label} is empty"
+
+      return None
+
+    try:
+      return json_to_vault(text)
+
+    except json.JSONDecodeError as e:
+      self.status_label.text = (
+        f"JSON error in {label.lower()}: line {e.lineno}, column {e.colno}"
+      )
+
+      return None
 
   # --------------------------------------------------------------------------------------
 
@@ -297,6 +306,17 @@ class VaultScreen(Screen):
   # MARK: private
   # --------------------------------------------------------------------------------------
 
+  @property
+  def _has_unsaved_changes(self) -> bool:
+    """True если _visible_json отличается от последнего сохранённого."""
+
+    return (
+      self._primary_visible_json != self._last_saved_primary_json
+      or self._backup_visible_json != self._last_saved_backup_json
+    )
+
+  # --------------------------------------------------------------------------------------
+
   def _compare_vaults(self, primary_json: str, backup_json: str) -> str:
     """Сравнить primary и backup, вернуть сообщение для статус-бара."""
 
@@ -304,10 +324,12 @@ class VaultScreen(Screen):
     backup_data = json.loads(backup_json)
 
     primary_map: dict[str, dict] = {}
+
     for e in primary_data.get("entries", []):
       primary_map[e["service"].casefold()] = e
 
     backup_map: dict[str, dict] = {}
+
     for e in backup_data.get("entries", []):
       backup_map[e["service"].casefold()] = e
 
@@ -336,11 +358,11 @@ class VaultScreen(Screen):
     if not diffs:
       return "Backup matches primary - no differences"
 
-    if len(diffs) <= 3:  # noqa: PLR2004
+    if len(diffs) <= self._MAX_DIFFS_SHOWN:
       return "Backup differs: " + "; ".join(diffs)
 
-    shown = diffs[:3]
-    remaining = len(diffs) - 3
+    shown = diffs[: self._MAX_DIFFS_SHOWN]
+    remaining = len(diffs) - self._MAX_DIFFS_SHOWN
 
     return f"Backup differs: {'; '.join(shown)}; +{remaining} more"
 
@@ -354,6 +376,9 @@ class VaultScreen(Screen):
 
     elif choice == "backup":
       self._primary_visible_json = self._backup_visible_json
+
+    else:
+      return
 
     self._do_upload()
 
@@ -377,8 +402,10 @@ class VaultScreen(Screen):
 
     if self._has_unsaved_changes:
       self._unsaved_popup = UnsavedChangesPopup()
+
       self._unsaved_popup.on_save_close = self._save_and_close
       self._unsaved_popup.on_discard = self._discard_and_close
+
       self._unsaved_popup.open()
 
       return True
@@ -390,14 +417,11 @@ class VaultScreen(Screen):
   def _save_and_close(self) -> None:
     """Сохранить изменения и закрыть приложение."""
 
-    self._unsaved_popup = None
     before = self._last_saved_primary_json
     self._do_upload()
 
     if self._last_saved_primary_json != before:
-      app = App.get_running_app()
-      assert app is not None
-      app.stop()
+      self._discard_and_close()
 
   # --------------------------------------------------------------------------------------
 
@@ -425,11 +449,11 @@ class VaultScreen(Screen):
     """Скрыть backup редактор (возврат к одному редактору)."""
 
     self.backup_editor.text = ""
-    self.backup_scroll.size_hint_x = 0
-    self.backup_scroll.opacity = 0
+    self.backup_scroll.size_hint_x = self._HIDDEN
+    self.backup_scroll.opacity = self._HIDDEN
     self.backup_editor.readonly = True
 
-    self.primary_scroll.size_hint_x = 1
+    self.primary_scroll.size_hint_x = self._FULL_WIDTH
 
   # --------------------------------------------------------------------------------------
 
@@ -438,6 +462,7 @@ class VaultScreen(Screen):
 
     if self._state == VaultState.SPLIT:
       self._backup_visible_json = self.backup_editor.text
+
     else:
       self._primary_visible_json = self.editor.text
 
@@ -462,38 +487,56 @@ class VaultScreen(Screen):
 
     if self._passwords_masked:
       hidden_primary = self._mask_passwords(self._primary_visible_json)
-      hidden_backup = self._mask_passwords(self._backup_visible_json)
-
-      if self.editor.text != hidden_primary:
-        self.editor.text = hidden_primary
-
-      self.editor.readonly = True
+      self._set_editor_display(self.editor, hidden_primary, readonly=True, focus=False)
 
       if is_split:
-        if self.backup_editor.text != hidden_backup:
-          self.backup_editor.text = hidden_backup
-
-        self.backup_editor.readonly = True
+        hidden_backup = self._mask_passwords(self._backup_visible_json)
+        self._set_editor_display(
+          self.backup_editor, hidden_backup, readonly=True, focus=False
+        )
 
     else:
-      if self.editor.text != self._primary_visible_json:
-        self.editor.text = self._primary_visible_json
-
-      self.editor.readonly = False
-      self.editor.focus = True
+      self._set_editor_display(
+        self.editor, self._primary_visible_json, readonly=False, focus=True
+      )
 
       if is_split:
-        if self.backup_editor.text != self._backup_visible_json:
-          self.backup_editor.text = self._backup_visible_json
+        self._set_editor_display(
+          self.backup_editor,
+          self._backup_visible_json,
+          readonly=False,
+          focus=False,
+        )
 
-        self.backup_editor.readonly = False
+  # --------------------------------------------------------------------------------------
+
+  def _set_editor_display(self, editor, text: str, readonly: bool, focus: bool) -> None:
+    """Установить текст и состояние одного редактора с защитой от лишнего on_text."""
+
+    if editor.text != text:
+      editor.text = text
+
+    editor.readonly = readonly
+
+    if focus:
+      editor.focus = True
 
   # --------------------------------------------------------------------------------------
 
   def _mask_passwords(self, json_str: str) -> str:
     """Заменить все значения password на ***."""
 
-    return re.sub(r'("password"\s*:\s*)"[^"]*"', r'\1"***"', json_str)
+    try:
+      data = json.loads(json_str)
+
+    except json.JSONDecodeError:
+      return json_str
+
+    for entry in data.get("entries", []):
+      if "password" in entry:
+        entry["password"] = "***"
+
+    return json.dumps(data, ensure_ascii=False, indent=2)
 
   # --------------------------------------------------------------------------------------
 
@@ -526,7 +569,6 @@ class VaultScreen(Screen):
         self.toolbar.add_enabled = False
         self.editor.readonly = True
 
-        self.primary_scroll.size_hint_x = 1
         self._collapse_backup_editor()
 
       case VaultState.LOADING:
@@ -535,7 +577,7 @@ class VaultScreen(Screen):
         self.toolbar.add_enabled = False
         self.editor.readonly = True
 
-        self.primary_scroll.size_hint_x = 1
+        self.primary_scroll.size_hint_x = self._FULL_WIDTH
 
       case VaultState.LOADED:
         self.toolbar.download_enabled = True
@@ -550,8 +592,8 @@ class VaultScreen(Screen):
         self.toolbar.upload_enabled = True
         self.toolbar.add_enabled = True
 
-        self.primary_scroll.size_hint_x = 0.5
-        self.backup_scroll.size_hint_x = 0.5
-        self.backup_scroll.opacity = 1
+        self.primary_scroll.size_hint_x = self._HALF_WIDTH
+        self.backup_scroll.size_hint_x = self._HALF_WIDTH
+        self.backup_scroll.opacity = self._FULL_WIDTH
 
         self._apply_hide_state()

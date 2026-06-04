@@ -47,8 +47,9 @@ class UnlockScreen(Screen, ErrorScreenMixin):
   def on_enter(self, *args: object) -> None:
     self.password_input.text = ""
     self.password_input.focus = True
-    self._clear_error()
     self._failed_attempts = 0
+
+    self._clear_error()
 
     cast("CesarVaultApp", App.get_running_app()).master_password = ""
 
@@ -69,29 +70,32 @@ class UnlockScreen(Screen, ErrorScreenMixin):
     app = cast("CesarVaultApp", App.get_running_app())
     app.master_password = password
 
+    vault_screen = cast("VaultScreen", self.manager.get_screen("vault"))
+
     # Пытаемся скачать и расшифровать хранилище
     try:
       primary_json_str, _ = download_primary(password)
 
       # Успех - передаём данные на VaultScreen
       self._failed_attempts = 0
-      vault_screen = cast("VaultScreen", self.manager.get_screen("vault"))
       vault_screen.preloaded_text = primary_json_str
       self.manager.current = "vault"
 
     except FileNotFoundError:
       # Хранилище ещё не создано - переходим с пустым редактором
       self._failed_attempts = 0
-      vault_screen = cast("VaultScreen", self.manager.get_screen("vault"))
       vault_screen.preloaded_text = ""
       self.manager.current = "vault"
 
     except (json.JSONDecodeError, DecryptionError):
       delay = min(2**self._failed_attempts, 16)
       self._failed_attempts += 1
+
       self._set_error(f"Invalid master password - wait {delay}s")
+
       self.password_input.readonly = True
       self.unlock_button.disabled = True
+
       Clock.schedule_once(self._enable_unlock, delay)
 
     except YaConnectionError as e:

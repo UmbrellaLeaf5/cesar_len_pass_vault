@@ -114,9 +114,7 @@ class CesarVaultConfig:
   def _save_android_settings(self, ya_token: str, remote_path: str) -> None:
     """Сохранить настройки в settings.json (Android)."""
 
-    from android.storage import app_storage_path  # type: ignore  # noqa: PLC0415
-
-    settings_path = Path(app_storage_path()) / "settings.json"
+    settings_path = self._env_path() / "settings.json"
     settings_path.parent.mkdir(parents=True, exist_ok=True)
 
     with open(settings_path, "w", encoding="utf-8") as f:
@@ -189,6 +187,7 @@ class CesarVaultConfig:
         os.environ["BACKUP_REMOTE_PATH"] = settings["BACKUP_REMOTE_PATH"]
 
     except (json.JSONDecodeError, OSError):
+      # Настройки повреждены или недоступны — fallback к .env / setup
       pass
 
   def _env_path(self) -> Path:

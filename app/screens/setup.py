@@ -32,6 +32,7 @@ class SetupScreen(Screen, ErrorScreenMixin):
     self.token_input.text = ""
     self.path_input.text = ""
     self.token_input.focus = True
+
     self._clear_error()
 
   # --------------------------------------------------------------------------------------

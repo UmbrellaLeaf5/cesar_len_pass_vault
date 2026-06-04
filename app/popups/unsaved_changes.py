@@ -32,8 +32,6 @@ class UnsavedChangesPopup(Popup):
     if self.on_save_close:
       self.on_save_close()
 
-    self.dismiss()
-
   # --------------------------------------------------------------------------------------
 
   def discard_and_close(self) -> None:
@@ -41,5 +39,3 @@ class UnsavedChangesPopup(Popup):
 
     if self.on_discard:
       self.on_discard()
-
-    self.dismiss()
