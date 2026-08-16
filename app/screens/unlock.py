@@ -74,17 +74,19 @@ class UnlockScreen(Screen, ErrorScreenMixin):
 
     # Пытаемся скачать и расшифровать хранилище
     try:
-      primary_json_str, _ = download_primary(password)
+      primary_json_str, _, modified_at = download_primary(password)
 
       # Успех - передаём данные на VaultScreen
       self._failed_attempts = 0
       vault_screen.preloaded_text = primary_json_str
+      vault_screen.preloaded_modified_at = modified_at
       self.manager.current = "vault"
 
     except FileNotFoundError:
       # Хранилище ещё не создано - переходим с пустым редактором
       self._failed_attempts = 0
       vault_screen.preloaded_text = ""
+      vault_screen.preloaded_modified_at = None
       self.manager.current = "vault"
 
     except (json.JSONDecodeError, DecryptionError):

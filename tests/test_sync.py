@@ -10,13 +10,14 @@
 
 import os
 from collections.abc import Generator
+from datetime import datetime
 from unittest.mock import patch
 
 import pytest
 import yadisk
 
 from cesar_len_pass_vault.config import config
-from cesar_len_pass_vault.sync import check_connection, download, upload
+from cesar_len_pass_vault.sync import check_connection, download, download_with_metadata, upload
 
 
 # ----------------------------------------------------------------------------------------
@@ -110,9 +111,10 @@ def test_upload_download_roundtrip() -> None:
   test_data = b"Hello, Yandex Disk! Test upload/download."
 
   upload(test_data)
-  downloaded = download()
+  downloaded, modified_at = download_with_metadata()
 
   assert downloaded == test_data
+  assert isinstance(modified_at, datetime)
 
 
 # ----------------------------------------------------------------------------------------

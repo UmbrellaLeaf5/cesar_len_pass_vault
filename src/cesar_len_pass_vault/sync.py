@@ -5,6 +5,7 @@ No local file - весь vault существует только как заши
 """
 
 import io
+from datetime import datetime
 
 import yadisk
 from yadisk.exceptions import PathNotFoundError, YaDiskError
@@ -40,22 +41,37 @@ def download(path: str | None = None) -> bytes:
   Возвращает сырые байты.
   """
 
+  encrypted_blob, _modified_at = download_with_metadata(path)
+
+  return encrypted_blob
+
+
+# ----------------------------------------------------------------------------------------
+
+
+def download_with_metadata(path: str | None = None) -> tuple[bytes, datetime]:
+  """Скачать зашифрованный блоб и время его последнего изменения."""
+
   target = path if path is not None else config.REMOTE_PATH
 
   try:
     y = get_client()
+    metadata = y.get_meta(target, fields=["modified"])
+    modified_at = metadata.modified
+
+    if modified_at is None:
+      raise YaConnectionError("Vault metadata does not contain the modification time")
+
     file_stream = io.BytesIO()
     y.download(target, file_stream)
 
-    return file_stream.getvalue()
+    return file_stream.getvalue(), modified_at
 
   except YaConnectionError:
     raise
 
   except PathNotFoundError:
-    raise FileNotFoundError(
-      "Vault not found on Disk. It may not be created yet."
-    ) from None
+    raise FileNotFoundError("Vault not found on Disk. It may not be created yet.") from None
 
   except YaDiskError as e:
     raise YaConnectionError(f"Download error: {e}") from e

@@ -2,17 +2,19 @@
 Операции с хранилищем: скачать/загрузить + шифрование/дешифрование.
 """
 
+from datetime import datetime
+
 from cesar_len_pass_vault import pack_vault, unpack_vault, vault_to_json
 from cesar_len_pass_vault.config import config
 from cesar_len_pass_vault.models import Vault
-from cesar_len_pass_vault.sync import download, upload
+from cesar_len_pass_vault.sync import download_with_metadata, upload
 
 
 # MARK: download
 # ----------------------------------------------------------------------------------------
 
 
-def download_primary(password: str) -> tuple[str, int]:
+def download_primary(password: str) -> tuple[str, int, datetime]:
   """
   Скачать и расшифровать primary-хранилище с Яндекс.Диска.
 
@@ -20,7 +22,7 @@ def download_primary(password: str) -> tuple[str, int]:
     password: мастер-пароль для расшифрования
 
   Returns:
-    Кортеж (json_str, entry_count) - JSON-строка и количество записей
+    Кортеж (json_str, entry_count, modified_at) - JSON, количество записей и время upload
 
   Raises:
     FileNotFoundError: хранилище ещё не создано
@@ -28,18 +30,18 @@ def download_primary(password: str) -> tuple[str, int]:
     json.JSONDecodeError: неверный пароль или повреждённые данные
   """
 
-  blob = download()
+  blob, modified_at = download_with_metadata()
   vault = unpack_vault(blob, password, primary=True)
   json_str = vault_to_json(vault)
 
-  return json_str, len(vault.entries)
+  return json_str, len(vault.entries), modified_at
 
 
 # MARK: backup
 # ----------------------------------------------------------------------------------------
 
 
-def download_backup(password: str) -> tuple[str, int]:
+def download_backup(password: str) -> tuple[str, int, datetime]:
   """
   Скачать и расшифровать backup-хранилище с Яндекс.Диска.
 
@@ -47,7 +49,7 @@ def download_backup(password: str) -> tuple[str, int]:
     password: мастер-пароль для расшифрования
 
   Returns:
-    Кортеж (json_str, entry_count) - JSON-строка и количество записей
+    Кортеж (json_str, entry_count, modified_at) - JSON, количество записей и время upload
 
   Raises:
     FileNotFoundError: backup ещё не создан
@@ -56,11 +58,11 @@ def download_backup(password: str) -> tuple[str, int]:
     DecryptionError: ошибка расшифрования backup
   """
 
-  blob = download(path=config.BACKUP_REMOTE_PATH)
+  blob, modified_at = download_with_metadata(path=config.BACKUP_REMOTE_PATH)
   vault = unpack_vault(blob, password, primary=False)
   json_str = vault_to_json(vault)
 
-  return json_str, len(vault.entries)
+  return json_str, len(vault.entries), modified_at
 
 
 # MARK: upload

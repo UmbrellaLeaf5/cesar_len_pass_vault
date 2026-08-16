@@ -49,6 +49,7 @@ class VaultScreen(Screen):
   hide_button = ObjectProperty(None)
 
   preloaded_text: str = ""
+  preloaded_modified_at: datetime | None = None
   _state: VaultState = VaultState.EMPTY
 
   _primary_visible_json: str = ""
@@ -85,12 +86,13 @@ class VaultScreen(Screen):
 
         return
 
-      self.status_label.text = (
-        f"Loaded {datetime.now().strftime('%H:%M')} - {len(vault.entries)} entries"
+      self.status_label.text = self._format_download_status(
+        len(vault.entries), self.preloaded_modified_at
       )
 
       self._update_ui_by_state(VaultState.LOADED)
       self.preloaded_text = ""
+      self.preloaded_modified_at = None
 
     else:
       self._update_ui_by_state(VaultState.EMPTY)
@@ -102,6 +104,20 @@ class VaultScreen(Screen):
   # MARK: download
   # --------------------------------------------------------------------------------------
 
+  def _format_download_status(self, amount: int, modified_at: datetime | None) -> str:
+    """Сформировать статус скачивания с временем последнего upload."""
+
+    downloaded_at = datetime.now().strftime("%H:%M")
+
+    if modified_at is None:
+      return f"Downloaded: {downloaded_at} - {amount} entries"
+
+    last_uploaded_at = modified_at.astimezone().strftime("%H:%M - %d.%m.%Y")
+
+    return f"Downloaded: {downloaded_at} - {amount} entries\nUploaded: {last_uploaded_at}"
+
+  # --------------------------------------------------------------------------------------
+
   def download(self) -> None:
     """Скачать хранилище с Яндекс.Диска и показать в редакторе."""
 
@@ -109,15 +125,13 @@ class VaultScreen(Screen):
     self.editor.text = ""
 
     try:
-      primary_json_str, amount = download_primary(self._get_password())
+      primary_json_str, amount, modified_at = download_primary(self._get_password())
       self._primary_visible_json = primary_json_str
       self._last_saved_primary_json = primary_json_str
 
       self._collapse_backup_editor()
       self._update_ui_by_state(VaultState.LOADED)
-      self.status_label.text = (
-        f"Loaded {datetime.now().strftime('%H:%M')} - {amount} entries"
-      )
+      self.status_label.text = self._format_download_status(amount, modified_at)
 
     except FileNotFoundError:
       self._collapse_backup_editor()
@@ -140,7 +154,7 @@ class VaultScreen(Screen):
     self._update_ui_by_state(VaultState.LOADING)
 
     try:
-      backup_json_str, _count = download_backup(self._get_password())
+      backup_json_str, _count, _modified_at = download_backup(self._get_password())
       self._backup_visible_json = backup_json_str
 
       # Показываем split: основной редактор остаётся, backup справа
@@ -166,10 +180,7 @@ class VaultScreen(Screen):
   def upload(self) -> None:
     """Открыть попап, проверить рассинхрон и загрузить на Яндекс.Диск."""
 
-    if (
-      self._state == VaultState.SPLIT
-      and self._primary_visible_json != self._backup_visible_json
-    ):
+    if self._state == VaultState.SPLIT and self._primary_visible_json != self._backup_visible_json:
       self.open_sync()
       return
 
@@ -194,9 +205,7 @@ class VaultScreen(Screen):
     backup_vault: Vault | None = None
 
     if is_split:
-      backup_vault = self._parse_vault_from_json(
-        self._backup_visible_json, "Backup editor"
-      )
+      backup_vault = self._parse_vault_from_json(self._backup_visible_json, "Backup editor")
 
       if backup_vault is None:
         return None, None, False
@@ -219,9 +228,7 @@ class VaultScreen(Screen):
       return json_to_vault(text)
 
     except json.JSONDecodeError as e:
-      self.status_label.text = (
-        f"JSON error in {label.lower()}: line {e.lineno}, column {e.colno}"
-      )
+      self.status_label.text = f"JSON error in {label.lower()}: line {e.lineno}, column {e.colno}"
 
       return None
 
@@ -258,7 +265,7 @@ class VaultScreen(Screen):
       self._last_saved_backup_json = self._backup_visible_json
 
       self.status_label.text = (
-        f"Saved {datetime.now().strftime('%H:%M')} - {len(primary_vault.entries)} entries"
+        f"Uploaded {datetime.now().strftime('%H:%M')} - {len(primary_vault.entries)} entries"
       )
 
       self._update_ui_by_state(VaultState.SPLIT if is_split else VaultState.LOADED)
@@ -278,9 +285,7 @@ class VaultScreen(Screen):
       self._toggle_passwords()
 
     popup = AddEntryPopup()
-    popup.target_editor = (
-      self.backup_editor if self._state == VaultState.SPLIT else self.editor
-    )
+    popup.target_editor = self.backup_editor if self._state == VaultState.SPLIT else self.editor
 
     popup.bind(on_dismiss=lambda *args: self._on_add_entry_dismissed(was_masked))  # type: ignore[arg-type]
     popup.open()
@@ -491,14 +496,10 @@ class VaultScreen(Screen):
 
       if is_split:
         hidden_backup = self._mask_passwords(self._backup_visible_json)
-        self._set_editor_display(
-          self.backup_editor, hidden_backup, readonly=True, focus=False
-        )
+        self._set_editor_display(self.backup_editor, hidden_backup, readonly=True, focus=False)
 
     else:
-      self._set_editor_display(
-        self.editor, self._primary_visible_json, readonly=False, focus=True
-      )
+      self._set_editor_display(self.editor, self._primary_visible_json, readonly=False, focus=True)
 
       if is_split:
         self._set_editor_display(
