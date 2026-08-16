@@ -51,7 +51,7 @@
           size_hint_x: None
           disabled: not toolbar.add_enabled
           opacity: 1 if toolbar.add_enabled else 0.4
-          on_release: root._toggle_passwords()
+          on_release: root.request_password_visibility_toggle()
 
         CustomButton:
           text: "*"

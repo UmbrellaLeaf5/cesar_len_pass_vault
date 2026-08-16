@@ -13,6 +13,7 @@ from kivy.properties import ObjectProperty
 from kivy.uix.screenmanager import Screen
 
 from app.popups.add_entry import AddEntryPopup
+from app.popups.confirm_show_passwords import ConfirmShowPasswordsPopup
 from app.popups.settings import SettingsPopup
 from app.popups.sync import SyncPopup
 from app.popups.unsaved_changes import UnsavedChangesPopup
@@ -473,6 +474,21 @@ class VaultScreen(Screen):
 
     if was_masked:
       self._toggle_passwords()
+
+  # --------------------------------------------------------------------------------------
+
+  def request_password_visibility_toggle(self) -> None:
+    """Запросить мастер-пароль перед показом скрытых паролей."""
+
+    if not self._passwords_masked:
+      self._toggle_passwords()
+
+      return
+
+    popup = ConfirmShowPasswordsPopup()
+    popup.master_password = self._get_password()
+    popup.confirm_callback = self._toggle_passwords
+    popup.open()
 
   # --------------------------------------------------------------------------------------
 
