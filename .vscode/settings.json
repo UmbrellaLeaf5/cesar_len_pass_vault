@@ -39,5 +39,6 @@
     "Роутинг",
     "Сериализует"
   ],
-  "materialkv.pythonFile": "main.py"
+  "materialkv.pythonFile": "main.py",
+  "ruff.configuration": "./ruff.toml"
 }

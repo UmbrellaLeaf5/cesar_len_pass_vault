@@ -1,5 +1,5 @@
 indent-width = 2
-line-length = 90
+line-length = 100
 
 [lint]
 select = ["E", "F", "B", "UP", "RUF", "I"]
